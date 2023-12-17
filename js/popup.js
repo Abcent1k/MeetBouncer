@@ -1,11 +1,16 @@
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
 const webexRegex = /https?:\/\/.{1,15}.webex.com\/.{20,300}/
+const codeRegex = /\w{3}-\w{4}-\w{3}/
 
 window.onload = function() {
-    chrome.storage.local.get(['mb-threshold', 'mb-current-tab'], function(res) {
+    chrome.storage.session.get(['meet-bouncer'], function(res) {
         if( typeof res !== 'undefined') {
             const display = document.getElementById("activeTabName")
-            display.innerHTML = "Active meet: "+ res['mb-current-tab'] + ", threshold: " + res['mb-threshold']
+            let meetsInfo = "Active meets: ";
+            res['meet-bouncer'].forEach(function(item) {
+                    meetsInfo += item['target-tab'].match(codeRegex)[0] + ", threshold: " + item['threshold'] + ";\n";
+                });
+            display.innerHTML = meetsInfo
             display.style.color = "blue"
             display.textAlign = "centre"
         }
@@ -30,23 +35,26 @@ function setAutoLeave() {
             if(response != "error" && typeof response !== 'undefined') {
                 const display = document.getElementById("activeTabName")
                 if (meetRegex.test(response.target)) {
-                    display.innerHTML = "Active meet: "+ response.target + ", threshold: " + response.threshold
+                    display.innerHTML = "Active meet: "+ response.target.match(codeRegex)[0] + ", threshold: " + response.threshold
                     display.style.color = "green"
                     display.textAlign = "centre"
                 }
 
                 if (webexRegex.test(response.target)) {
-                    display.innerHTML = "Active webex: "+ response.target + ", threshold: " + response.threshold
+                    display.innerHTML = "Active webex: "+ response.target.match(codeRegex)[0] + ", threshold: " + response.threshold
                     display.style.color = "green"
                     display.textAlign = "centre"
                 }
 
-                chrome.storage.local.set({'mb-threshold': response.threshold}, function() {
-                    console.log('setted')
-                })
-                chrome.storage.local.set({'mb-current-tab': response.target }, function() {
-                    console.log('setted')
-                })
+                chrome.storage.session.get(['meet-bouncer'], function(res) {
+                    let mbArray = [];
+                    if(typeof res['meet-bouncer'] !== 'undefined') {
+                        mbArray = res['meet-bouncer'];
+                    }
+                        mbArray.push({'threshold': response.threshold,
+                                      'target-tab': response.target })
+                        chrome.storage.session.set({'meet-bouncer': mbArray})
+                });
             }
         })
     }
