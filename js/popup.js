@@ -8,7 +8,7 @@ window.onload = function() {
             const display = document.getElementById("activeTabName")
             let meetsInfo = "Active meets: ";
             res['meet-bouncer'].forEach(function(item) {
-                    meetsInfo += item['target-tab'].match(codeRegex)[0] + ", threshold: " + item['threshold'] + ";\n";
+                    meetsInfo += item['target_url'].match(codeRegex)[0] + ", threshold: " + item['threshold'] + ";\n";
                 });
             display.innerHTML = meetsInfo
             display.style.color = "blue"
@@ -52,7 +52,9 @@ function setAutoLeave() {
                         mbArray = res['meet-bouncer'];
                     }
                         mbArray.push({'threshold': response.threshold,
-                                      'target-tab': response.target })
+                                      'target_url': response.target_url,
+                                      'target_id': response.target_id,
+                                      })
                         chrome.storage.session.set({'meet-bouncer': mbArray})
                 });
             }
