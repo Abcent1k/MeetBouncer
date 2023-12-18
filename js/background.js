@@ -20,6 +20,64 @@ function setIcon(activeFlag) {
 
 }
 
+function googlemeet(threshold)
+{
+    if (document.getElementsByClassName('uGOf1d').length <= 0) {
+        /*
+            user have not enter the room.
+        */
+        alert("Please make sure you have already joined the room!")
+    } else {
+        lastNumParticipants = document.getElementsByClassName('uGOf1d')[0].innerHTML;
+        if (typeof init === 'undefined') {
+            const init = function () {
+                console.log("lastNumParticipants: " + lastNumParticipants);
+                chrome.runtime.sendMessage({ msg: 'activate_icon', threshold: threshold }, function (response) {
+                    if (response)
+                        console.log("Image is set");
+                    else
+                        console.log("Image is not set");
+                });
+            }
+            init()
+        }
+        if (typeof update === 'undefined') {
+            const update = setInterval(function () {
+                let numParticipants = parseInt(document.getElementsByClassName('uGOf1d')[0].innerHTML);
+                console.log('threshold:' + threshold)
+                console.log('current: ' + numParticipants)
+
+                if (numParticipants <= threshold) {
+                    console.log("threshold met.. user will now leave the google meet")
+                    /*
+                        assume user is not a host
+                    */
+                    let a = document.getElementsByTagName('i')
+
+                    for (i of a) {
+                        if (i.innerHTML == 'call_end') {
+                            i.click()
+                        }
+                    }
+                    console.log("user left the call")
+
+                    chrome.runtime.sendMessage({ msg: 'default_icon' }, function (response) {
+                        if (response)
+                            console.log("Image is reset");
+                        else
+                            console.log("Image is not reset");
+                    });
+
+                    clearInterval(update)
+                }
+            }
+                , 8000)
+        } else {
+            console.log("another call already exist")
+        }
+    }
+}
+
 function processPopUpMessage(request, sender, sendResponse) {
     /*
         process sendMessage from popup.js and content.js
@@ -28,12 +86,14 @@ function processPopUpMessage(request, sender, sendResponse) {
         console.log("background.js received a click event message from popup.js for" + request.msg)
         chrome.tabs.query({active: true, currentWindow: true}, function (tab) {
             if(meetRegex.test(tab[0].url)) {
-                currentTabId = tab[0].id
-                meetTabs[currentTabId] = tab[0].url;
+                meetTabs[tab[0].id] = [tab[0].url, request.threshold];
                 chrome.scripting.executeScript({
                     target: {tabId: tab[0].id},
-                    files: ["./js/googlemeet.js"]
+                    files: ["./js/googlemeet.js"],
+                    //args: [request.threshold],
+                    //function: googlemeet
                 });
+
                 res = {target: tab[0].url, threshold: request.threshold}
             }
             sendResponse(res);
@@ -43,9 +103,17 @@ function processPopUpMessage(request, sender, sendResponse) {
     }
 
     if ( request.msg == 'get-threshold') {
-        chrome.storage.local.get(['mb-threshold'], function (res) {
-            sendResponse(res['mb-threshold'])
-        })
+        chrome.storage.session.get(['meet-bouncer'], function (res) {
+            chrome.tabs.query({active: true, currentWindow: true}, function (tab) {
+                if (meetRegex.test(tab[0].url))
+                {
+                    for(let key in res['meet-bouncer']){
+                        if(res['meet-bouncer'][key]['target-tab'] == tab[0].url)
+                            sendResponse(res['meet-bouncer'][key]['threshold']);
+                    }
+                }
+            });
+        });
 
         return true;
     }
@@ -86,7 +154,37 @@ function checkTabClosed(tabId, removed) {
         console.log("does not match")
     }
 }
+function checkTabActivated(activeInfo)
+{
+    if (meetTabs.length == 0) {
+        setIcon(false);
+    }
+    else if (meetTabs[activeInfo.tabId]) {
+        chrome.action.setBadgeText({text: "" + meetTabs[activeInfo.tabId][1]});
+    }
+    else{
+        chrome.action.setBadgeText({text: ""});
+    }
+
+    // console.log("tabId:"+tabId.tabId)
+    // if (true){
+    //     chrome.storage.session.get(['meet-bouncer'], function(res) {
+    //         if(typeof res['meet-bouncer'] !== 'undefined' || res['meet-bouncer'].length == 0){
+    //             setIcon(false);
+    //         }
+    //         for(let key in res['meet-bouncer'])
+    //         {
+    //             setIcon(true);
+    //             if (tabId == key)
+    //             {
+    //                 chrome.action.setBadgeText({text: "" + res['meet-bouncer'][key]["threshold"]});
+    //             }
+    //         }
+    //     });
+    // }
+}
 chrome.tabs.onRemoved.addListener(checkTabClosed)
+chrome.tabs.onActivated.addListener(checkTabActivated)
 chrome.runtime.onMessage.addListener(processPopUpMessage)
 
 
