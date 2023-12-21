@@ -60,7 +60,7 @@ function processPopUpMessage(request, sender, sendResponse) {
                     console.log("Get-threshold from " + found_tab['target_url'])
                     if (typeof found_tab !== 'undefined')
                         res = { target_url: tab[0].url, threshold: found_tab["threshold"], target_id: tab[0].id }
-                    sendResponse(res)
+                    sendResponse(res);
                 });
             }
         });
@@ -92,28 +92,39 @@ function processPopUpMessage(request, sender, sendResponse) {
     return true;
 }
 
-function checkTabClosed(closedInfo) {
+function tabAction(tabId) {
     chrome.storage.session.get(['meet-bouncer'], function (res) {
         let meetTabs = res['meet-bouncer'];
 
         if (typeof meetTabs === 'undefined' || meetTabs.length === 0 ||
-            typeof meetTabs.find(item => item.target_id === closedInfo) === 'undefined') {
-            console.log("Сlosed tab is not included in meetTabs")
+        typeof meetTabs.find(item => item.target_id === tabId) === 'undefined') {
+            console.log("This tab is not included in meetTabs");
             return false;
+        } else {
+            meetTabs = meetTabs.filter(item => item.target_id !== tabId);
+            chrome.storage.session.set({ 'meet-bouncer': meetTabs })
+            if (meetTabs.length === 0) {
+                console.log("No more extension tabs, set the disabled icon");
+                setIcon("disabled");
+            }
+            return true;
         }
-
-        meetTabs = meetTabs.filter(item => item.target_id !== closedInfo);
-        chrome.storage.session.set({ 'meet-bouncer': meetTabs })
-        chrome.action.setBadgeText({ text: "", tabId: closedInfo });
-        if (meetTabs.length === 0) {
-            console.log("No more extension tabs, set the disabled icon")
-            setIcon("disabled")
-        }
-        return true;
     });
 }
 
-function checkTabActivated(activeInfo) {
+function checkTabClosed(tabId) {
+    if (tabAction(tabId))
+    chrome.action.setBadgeText({ text: "", tabId: tabId });
+}
+
+
+function checkTabUpdated(tabId, changeInfo) {
+    if (changeInfo.status === 'loading') {
+        tabAction(tabId);
+    }
+}
+
+function checkTabActivated(tabId) {
     chrome.storage.session.get(['meet-bouncer'], function (res) {
         let meetTabs = res['meet-bouncer'];
 
@@ -131,10 +142,10 @@ function checkTabActivated(activeInfo) {
                     activeTabsCount++;
                 if (index === array.length - 1) {
                     if (activeTabsCount === meetTabs.length) {
-                        console.log("All tabs with the extension are active, set the active icon")
+                        console.log("All tabs with the extension are active, set the active icon");
                         setIcon("active");
                     } else {
-                        console.log("Not all tabs with the extension are active, set the inactive icon")
+                        console.log("Not all tabs with the extension are active, set the inactive icon");
                         setIcon("inactive");
                     }
                 }
@@ -144,6 +155,6 @@ function checkTabActivated(activeInfo) {
 }
 
 chrome.tabs.onRemoved.addListener(checkTabClosed)
-//chrome.tabs.onUpdated.addListener()
+chrome.tabs.onUpdated.addListener(checkTabUpdated)
 chrome.tabs.onActivated.addListener(checkTabActivated)
 chrome.runtime.onMessage.addListener(processPopUpMessage)
