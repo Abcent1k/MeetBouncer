@@ -8,15 +8,26 @@ var currentTabId;
 function setIcon(activeFlag) {
     if (activeFlag == "active") {
         chrome.action.setBadgeBackgroundColor({ color: [255, 0, 0, 255] });
-        chrome.action.setIcon({ path: "../img/mb-active-48.png" });
+        chrome.action.setIcon({ path: {
+            "16": "../img/mb-active-16.png",
+            "48": "../img/mb-active-48.png"
+            }
+        });
     }
     else if (activeFlag == "inactive") {
-        chrome.action.setIcon({ path: "../img/mb-inactive-48.png" });
+        chrome.action.setIcon({ path: {
+            "16": "../img/mb-inactive-16.png",
+            "48": "../img/mb-inactive-48.png"
+            }
+        });
     }
     else if (activeFlag == "disabled") {
-        chrome.action.setIcon({ path: "../img/mb-disabled-48.png" });
+        chrome.action.setIcon({ path: {
+            "16": "../img/mb-disabled-16.png",
+            "48": "../img/mb-disabled-48.png"
+            }
+        });
     }
-
 }
 
 function processPopUpMessage(request, sender, sendResponse) {
