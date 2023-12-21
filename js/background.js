@@ -68,13 +68,6 @@ function processPopUpMessage(request, sender, sendResponse) {
         return true;
     }
 
-    if (request.msg === "checkTabActive") {
-        chrome.tabs.query({ url: request.url, active: true }, function (tabs) {
-            sendResponse({ isActive: tabs.length > 0 });
-        });
-        return true;
-    }
-
     if (request.msg == "activate_icon") {
         chrome.action.setBadgeText({ text: "" + request.threshold, tabId: request.tab_id });
         setIcon("active");
@@ -91,7 +84,7 @@ function processPopUpMessage(request, sender, sendResponse) {
         return true;
     }
 
-    if (request.msg == 'close_meet_tab') {
+    if (request.msg == 'check_close_meet') {
         checkTabClosed(request.tab_id);
         return true;
     }
@@ -100,10 +93,6 @@ function processPopUpMessage(request, sender, sendResponse) {
 }
 
 function checkTabClosed(closedInfo) {
-    /*
-    This method check if a tab is closed and whether it matches the tabId of the google meet tab
-    */
-
     chrome.storage.session.get(['meet-bouncer'], function (res) {
         let meetTabs = res['meet-bouncer'];
 
@@ -131,28 +120,30 @@ function checkTabActivated(activeInfo) {
         if (typeof meetTabs === 'undefined' || meetTabs.length === 0)
             return false;
 
-        if (typeof meetTabs.find(item => item.target_id === activeInfo.tabId) === 'undefined') {
-            console.log("Active tab is not included in meetTabs")
-            return false;
-        }
-
         let activeTabsCount = 0;
         meetTabs.forEach((dict, index, array) => {
-            chrome.tabs.query({ url: dict.target_url, active: true }, function (tabs) {
-                if (tabs.length > 0)
+            chrome.tabs.get(dict.target_id, function(tab) {
+                if (chrome.runtime.lastError) {
+                    console.log("Error on receiving a tab: ", chrome.runtime.lastError.message);
+                    return;
+                }
+                if (typeof tab !== "undefined" && tab.active)
                     activeTabsCount++;
                 if (index === array.length - 1) {
                     if (activeTabsCount === meetTabs.length) {
                         console.log("All tabs with the extension are active, set the active icon")
                         setIcon("active");
+                    } else {
+                        console.log("Not all tabs with the extension are active, set the inactive icon")
+                        setIcon("inactive");
                     }
                 }
             });
         });
-
     });
 }
 
 chrome.tabs.onRemoved.addListener(checkTabClosed)
+//chrome.tabs.onUpdated.addListener()
 chrome.tabs.onActivated.addListener(checkTabActivated)
 chrome.runtime.onMessage.addListener(processPopUpMessage)
