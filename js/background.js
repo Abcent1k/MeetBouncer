@@ -8,13 +8,13 @@ var currentTabId;
 function setIcon(activeFlag) {
     if (activeFlag == "active") {
         chrome.action.setBadgeBackgroundColor({ color: [255, 0, 0, 255] });
-        chrome.action.setIcon({ path: "../img/mb-active38.png" });
+        chrome.action.setIcon({ path: "../img/mb-active-48.png" });
     }
     else if (activeFlag == "inactive") {
-        chrome.action.setIcon({ path: "../img/mb-inactive38.png" });
+        chrome.action.setIcon({ path: "../img/mb-inactive-48.png" });
     }
     else if (activeFlag == "disabled") {
-        chrome.action.setIcon({ path: "../img/mb-disabled38.png" });
+        chrome.action.setIcon({ path: "../img/mb-disabled-48.png" });
     }
 
 }
@@ -122,7 +122,6 @@ function checkTabActivated(activeInfo) {
 
         if (typeof meetTabs.find(item => item.target_id === activeInfo.tabId) === 'undefined') {
             console.log("Active tab is not included in meetTabs")
-            setIcon("inactive");
             return false;
         }
 
