@@ -12,7 +12,7 @@ chrome.runtime.sendMessage({ msg: "get-threshold" }, function (response) {
         */
         alert("Please make sure you have already joined the room!")
     } else {
-        chrome.runtime.sendMessage({msg: 'activate_icon',
+        chrome.runtime.sendMessage({msg: 'extension_activation',
                                     threshold: threshold,
                                     tab_id: tab_id
         });
@@ -34,5 +34,16 @@ chrome.runtime.sendMessage({ msg: "get-threshold" }, function (response) {
                 clearInterval(update)
             }
         }, 8000);
+    }
+});
+
+document.addEventListener("visibilitychange", function() {
+    chrome.runtime.sendMessage({msg: 'check_tabs_visibility'});
+});
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "check_visibility") {
+        const isVisible = document.visibilityState === "visible";
+        sendResponse({ isVisible: isVisible });
     }
 });
