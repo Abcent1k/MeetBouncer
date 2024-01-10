@@ -2,8 +2,8 @@
 
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
 const codeRegex = /\w{3}-\w{4}-\w{3}/
-var res = "error"
-var currentTabId;
+//let res = "error"
+//var currentTabId;
 
 function setIcon(activeFlag) {
     if (activeFlag == "active") {
@@ -47,6 +47,9 @@ function processPopUpMessage(request, sender, sendResponse) {
                 });
 
                 res = { target_url: tab[0].url, threshold: request.threshold, target_id: tab[0].id }
+            } 
+            else {
+                res = "error";
             }
             sendResponse(res);
         });

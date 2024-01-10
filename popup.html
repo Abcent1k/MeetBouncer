@@ -1,25 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <link rel="stylesheet" href="./css/style.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-  </head>
-  <body>
-    <div class="wrapper">
-        <h1>MeetBouncer</h1>
-        <p>Automatically leave a Google Meeting when a certain threshold (number of participant left the meeting) is met!</p>
-        <div class="active-tab">
-        <p id="activeTabName">Active: none</p>
-        </div>
-        <div class="button-wrapper">
-            <button id="minusThreshold" class="btn btn-dark">-</button>
-            <input type="number" id="threshold" value="5">
-            <button id="plusThreshold" class="btn btn-dark">+</button>
-        </div>
-        <div class="button-wrapper">
-            <button id="setBtn" class="btn btn-primary">Set</button>
-        </div>
+
+<head>
+  <title>MeetBouncer</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Indic+Siyaq+Numbers&family=Open+Sans:wght@300;400;500;600;700&family=Roboto:wght@300;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <h1>MeetBouncer</h1>
+  <p id="info">Automatically leave a Google meeting when a certain threshold of participants is reached!</p>
+  <div class="active-calls">
+    <h2>Active Calls</h2>
+    <ul id="active_tabs_list">
+      <li>No active calls</li>
+    </ul>
+  </div>
+  <div class="participants-control">
+    <h2>Participants Control</h2>
+    <input type="range" min="0" max="100" value="5" class="slider" id="participants-slider">
+    <div class="fill"></div>
+    <div class="slider-labels">
+      <span class="slider-label slider-label-left">0</span>
+      <span class="slider-value">Participants: 5</span>
+      <span class="slider-label slider-label-right">100</span>
     </div>
-    <script src="./js/popup.js"></script>
-  </body>
+  </div>
+  <div class="button-container">
+    <button id="setButton">Set</button>
+    <button id="resetButton">Reset</button>
+  </div>
+
+  <script src="./js/popup.js"></script>
+</body>
+
 </html>

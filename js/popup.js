@@ -4,43 +4,42 @@ const codeRegex = /\w{3}-\w{4}-\w{3}/
 
 window.onload = function () {
     chrome.storage.session.get(['meet-bouncer'], function (res) {
-        if (typeof res !== 'undefined') {
-            const display = document.getElementById("activeTabName")
-            let meetsInfo = "Active meets: ";
-            res['meet-bouncer'].forEach(function (item) {
-                meetsInfo += item['target_url'].match(codeRegex)[0] + ", threshold: " + item['threshold'] + ";\n";
-            });
-            display.innerHTML = meetsInfo
-            display.style.color = "blue"
-            display.textAlign = "centre"
-        }
+        // if (typeof res !== 'undefined') {
+        //     const display = document.getElementById("activeTabName")
+        //     let meetsInfo = "Active meets: ";
+        //     res['meet-bouncer'].forEach(function (item) {
+        //         meetsInfo += item['target_url'].match(codeRegex)[0] + ", threshold: " + item['threshold'] + ";\n";
+        //     });
+        //     display.innerHTML = meetsInfo
+        //     display.style.color = "blue"
+        //     display.textAlign = "centre"
+        // }
+        updateSliderValue();
     })
 }
 
 function setAutoLeave() {
-    let threshold = document.getElementById('threshold').value
+    console.log("AaAAAAaAA");
+    let threshold = 1;//document.getElementById('participants-slider').value
     if (parseInt(threshold) > 0) {
         chrome.runtime.sendMessage({ msg: 'set-auto-leave', threshold: threshold }, function (response) {
             if (!response) {
                 console.log(chrome.runtime.lastError.message)
             }
-
-            if (response == "error") {
+            else if (response == "error") {
                 const display = document.getElementById("activeTabName")
                 display.innerHTML = "Please make sure you are in a Google Meet or WebEx tab"
                 display.style.color = "red"
                 display.textAlign = "centre"
             }
-
-            if (response != "error" && typeof response !== 'undefined') {
+            else if (response != "error" && typeof response !== 'undefined') {
                 const display = document.getElementById("activeTabName")
                 if (meetRegex.test(response.target)) {
                     display.innerHTML = "Active meet: " + response.target.match(codeRegex)[0] + ", threshold: " + response.threshold
                     display.style.color = "green"
                     display.textAlign = "centre"
                 }
-
-                if (webexRegex.test(response.target)) {
+                else if (webexRegex.test(response.target)) {
                     display.innerHTML = "Active webex: " + response.target.match(codeRegex)[0] + ", threshold: " + response.threshold
                     display.style.color = "green"
                     display.textAlign = "centre"
@@ -63,23 +62,14 @@ function setAutoLeave() {
     }
 }
 
+const slider = document.getElementById('participants-slider');
+const sliderValueDisplay = document.querySelector('.slider-value');
 
-function minus() {
-    let thresholdInput = document.getElementById('threshold')
-    let currentThreshold = thresholdInput.value
-    if (currentThreshold > 0) {
-        thresholdInput.value = parseInt(currentThreshold) - 1
-    }
+function updateSliderValue() {
+  sliderValueDisplay.textContent = `Participants: ${slider.value}`;
 }
 
-function plus() {
-    let thresholdInput = document.getElementById('threshold')
-    let currentThreshold = thresholdInput.value
-    if (currentThreshold >= 0) {
-        thresholdInput.value = parseInt(currentThreshold) + 1
-    }
-}
+//const setButton = document.getElementById('setButton');
 
-minusThreshold.addEventListener('click', minus)
-plusThreshold.addEventListener('click', plus)
-setBtn.addEventListener('click', setAutoLeave)
+slider.addEventListener('input', updateSliderValue);
+setButton.addEventListener('click', setAutoLeave)
