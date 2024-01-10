@@ -2,7 +2,7 @@
 
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
 const codeRegex = /\w{3}-\w{4}-\w{3}/
-//let res = "error"
+let res = "error"
 //var currentTabId;
 
 function setIcon(activeFlag) {
@@ -38,7 +38,7 @@ function processPopUpMessage(request, sender, sendResponse) {
         process sendMessage from popup.js and content.js
     */
     if (request.msg == 'set-auto-leave') {
-        console.log("background.js received a click event message from popup.js for" + request.msg)
+        console.log("background.js received a click event message from popup.js for " + request.msg)
         chrome.tabs.query({ active: true, currentWindow: true }, function (tab) {
             if (meetRegex.test(tab[0].url)) {
                 chrome.scripting.executeScript({
@@ -47,9 +47,6 @@ function processPopUpMessage(request, sender, sendResponse) {
                 });
 
                 res = { target_url: tab[0].url, threshold: request.threshold, target_id: tab[0].id }
-            } 
-            else {
-                res = "error";
             }
             sendResponse(res);
         });
