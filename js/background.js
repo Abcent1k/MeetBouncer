@@ -41,9 +41,26 @@ function processPopUpMessage(request, sender, sendResponse) {
         console.log("background.js received a click event message from popup.js for " + request.msg)
         chrome.tabs.query({ active: true, currentWindow: true }, function (tab) {
             if (meetRegex.test(tab[0].url)) {
-                chrome.scripting.executeScript({
-                    target: { tabId: tab[0].id },
-                    files: ["./js/googlemeet.js"],
+                chrome.storage.session.get(['meet-bouncer'], function (res) {
+                    if (typeof res['meet-bouncer'] !== 'undefined' && res['meet-bouncer'].length !== 0) {
+                        let mbArray = [];
+                        if (typeof res['meet-bouncer'] !== 'undefined')
+                            mbArray = res['meet-bouncer'];
+                        let found_tab = mbArray.find(item => item.target_id === tab[0].id);
+                        if (typeof found_tab !== 'undefined') {
+                            chrome.storage.session.set({ 'meet-bouncer': mbArray.filter(item => item.target_id !== tab[0].id) });
+                            chrome.action.setBadgeText({ text: "" + request.threshold, tabId: tab[0].id });
+                            chrome.tabs.sendMessage(tab[0].id, { action: "changeThreshold", threshold: request.threshold });
+
+                            res = { target_url: tab[0].url, threshold: request.threshold, target_id: tab[0].id }
+                            sendResponse(res);
+                            return true;
+                        }
+                    }
+                    chrome.scripting.executeScript({
+                        target: { tabId: tab[0].id },
+                        files: ["./js/googlemeet.js"],
+                    });
                 });
 
                 res = { target_url: tab[0].url, threshold: request.threshold, target_id: tab[0].id }

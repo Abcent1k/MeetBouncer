@@ -1,4 +1,5 @@
 var threshold;
+var intervalId;
 
 chrome.runtime.sendMessage({ msg: "get-threshold" }, function (response) {
     threshold = response.threshold
@@ -17,7 +18,7 @@ chrome.runtime.sendMessage({ msg: "get-threshold" }, function (response) {
                                     tab_id: tab_id
         });
 
-        const update = setInterval(function () {
+        intervalId = setInterval(function () {
             let numParticipants = parseInt(document.getElementsByClassName('uGOf1d')[0].innerHTML);
             console.log('Threshold: ' + threshold + "\n" + 'Current participants: ' + numParticipants)
 
@@ -31,7 +32,7 @@ chrome.runtime.sendMessage({ msg: "get-threshold" }, function (response) {
                 console.log("User left the call")
                 chrome.runtime.sendMessage({ msg: 'check_close_meet', tab_id: tab_id });
 
-                clearInterval(update)
+                clearInterval(intervalId)
             }
         }, 8000);
     }
@@ -45,5 +46,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "check_visibility") {
         const isVisible = document.visibilityState === "visible";
         sendResponse({ isVisible: isVisible });
+    }
+});
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "changeThreshold") {
+        threshold = request.threshold;
+        console.log("Threshold changed");
     }
 });
