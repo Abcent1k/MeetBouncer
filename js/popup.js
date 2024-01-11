@@ -1,22 +1,22 @@
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
 const webexRegex = /https?:\/\/.{1,15}.webex.com\/.{20,300}/
 const codeRegex = /\w{3}-\w{4}-\w{3}/
-const display = document.getElementById("active_tabs_list")
+const setButton = document.getElementById('setButton');
+const resetButton = document.getElementById('resetButton');
+const tab_container = document.getElementById("active_tabs_list")
 const t = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
 
 window.onload = function () {
     chrome.storage.session.get(['meet-bouncer'], function (res) {
         if (typeof res !== 'undefined') {
-            let meetsInfo = "";
-            if (typeof res['meet-bouncer'] === 'undefined' || res['meet-bouncer'].length === 0) {
-                meetsInfo = "<li>No active calls</li>";
-            }
+            if (typeof res['meet-bouncer'] === 'undefined' || res['meet-bouncer'].length === 0)
+                addNoActiveCalls();
             else {
+                tab_container.innerHTML = "";
                 res['meet-bouncer'].forEach(function (item) {
-                    meetsInfo += "<li>meet.google.com/" + item['target_url'].match(codeRegex)[0] + t + "lim: " + item['threshold'] + ";</li>";
+                    addListItem(item);
                 });
             }
-            display.innerHTML = meetsInfo;
         }
         updateSliderValue();
     })
@@ -29,15 +29,12 @@ function setAutoLeave() {
             if (!response) {
                 console.log(chrome.runtime.lastError.message)
             }
-            if (response === "error") {//Переделать
-                display.innerHTML = "Please make sure you are in a Google Meet or WebEx tab"
-                display.style.color = "red"
-                display.textAlign = "centre"
+            if (response === "error") {
+                //make sure you are in a Google Meet tab
             }
             if (typeof response !== 'undefined' && response !== "error") {
 
                 chrome.storage.session.get(['meet-bouncer'], function (res) {
-                    let meetsInfo = "";
                     let mbArray = [];
                     if (typeof res['meet-bouncer'] !== 'undefined')
                         mbArray = res['meet-bouncer'];
@@ -49,11 +46,10 @@ function setAutoLeave() {
                     });
                     chrome.storage.session.set({ 'meet-bouncer': mbArray });
 
+                    tab_container.innerHTML = "";
                     mbArray.forEach(function (item) {
-                        meetsInfo += "<li>meet.google.com/" + item['target_url'].match(codeRegex)[0] + t + "lim: " + item['threshold'] + ";</li>";
+                        addListItem(item);
                     });
-
-                    display.innerHTML = meetsInfo;
                 });
             }
         });
@@ -64,22 +60,40 @@ function resetAutoLeave() {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tab) {
         chrome.runtime.sendMessage({ msg: 'check_close_meet', tab_id: tab[0].id });
         chrome.storage.session.get(['meet-bouncer'], function (res) {
-            let meetsInfo = "";
             let mbArray = [];
             if (typeof res['meet-bouncer'] !== 'undefined')
                 mbArray = res['meet-bouncer'];
 
             mbArray = mbArray.filter(item => item.target_id !== tab[0].id);
 
+            tab_container.innerHTML = "";
+
             if (mbArray.length === 0)
-                meetsInfo = "<li>No active calls</li>";
+                addNoActiveCalls();
 
             mbArray.forEach(function (item) {
-                meetsInfo += "<li>meet.google.com/" + item['target_url'].match(codeRegex)[0] + t + "lim: " + item['threshold'] + ";</li>";
+                addListItem(item);
             });
-            display.innerHTML = meetsInfo;
         });
     });
+}
+
+function addListItem(tab) {
+    let listItem = document.createElement('li');
+    listItem.innerHTML = `meet.google.com/${tab['target_url'].match(codeRegex)[0]} ${t} lim: ${tab['threshold']};`;
+    listItem.style.cursor = 'pointer';
+    listItem.setAttribute('data-tabId', tab["target_id"]);
+    listItem.addEventListener('click', function() {
+        let tabId = parseInt(this.getAttribute('data-tabId'));
+        chrome.tabs.update(tabId, {active: true});
+    });
+    document.querySelector('#active_tabs_list').appendChild(listItem);
+}
+
+function addNoActiveCalls() {
+    let listItem = document.createElement('li');
+    listItem.innerHTML = `No active calls`;
+    document.querySelector('#active_tabs_list').appendChild(listItem);
 }
 
 const slider = document.getElementById('participants-slider');
@@ -89,8 +103,7 @@ function updateSliderValue() {
     sliderValueDisplay.textContent = `Participants: ${slider.value}`;
 }
 
-const setButton = document.getElementById('setButton');
-const resetButton = document.getElementById('resetButton');
+
 
 slider.addEventListener('input', updateSliderValue);
 setButton.addEventListener('click', setAutoLeave);

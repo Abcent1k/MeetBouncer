@@ -1,9 +1,6 @@
-'use strict'
-
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
 const codeRegex = /\w{3}-\w{4}-\w{3}/
 let res = "error"
-//var currentTabId;
 
 function setIcon(activeFlag) {
     if (activeFlag == "active") {
