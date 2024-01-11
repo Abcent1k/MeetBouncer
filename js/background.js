@@ -161,26 +161,30 @@ function checkTabsVisibility() {
             return false;
 
         let activeTabsCount = 0;
-        meetTabs.forEach((dict, index, array) => {
-            chrome.tabs.sendMessage(dict.target_id, { action: "check_visibility" }, function (response) {
-                if (chrome.runtime.lastError) {
-                    console.log("Error when checking that tabs are active: ", chrome.runtime.lastError.message);
-                    return;
-                }
-                if (response && response.isVisible)
-                    activeTabsCount++;
-
-                if (index === array.length - 1) {
-                    if (activeTabsCount === meetTabs.length) {
-                        console.log("All tabs with the extension are active, set the active icon");
-                        setIcon("active");
-                    } else {
-                        console.log("Not all tabs with the extension are active, set the inactive icon");
-                        setIcon("inactive");
+        setTimeout(function () {
+            meetTabs.forEach((dict, index, array) => {
+                chrome.tabs.sendMessage(dict.target_id, { action: "check_visibility" }, function (response) {
+                    if (chrome.runtime.lastError) {
+                        console.log("Error when checking that tabs are active: ", chrome.runtime.lastError.message);
+                        return;
                     }
-                }
+                    if (response && response.isVisible)
+                        activeTabsCount++;
+
+                    if (index === array.length - 1) {
+                        setTimeout(function () {
+                            if (activeTabsCount === meetTabs.length) {
+                                console.log("All tabs with the extension are active, set the active icon");
+                                setIcon("active");
+                            } else {
+                                console.log("Not all tabs with the extension are active, set the inactive icon");
+                                setIcon("inactive");
+                            }
+                        }, 10);
+                    }
+                });
             });
-        });
+        }, 10);
     });
 }
 
