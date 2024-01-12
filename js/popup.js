@@ -59,6 +59,7 @@ function setAutoLeave() {
 function resetAutoLeave() {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tab) {
         chrome.runtime.sendMessage({ msg: 'check_close_meet', tab_id: tab[0].id });
+        chrome.tabs.sendMessage(tab[0].id, { action: "reset_extension"});
         chrome.storage.session.get(['meet-bouncer'], function (res) {
             let mbArray = [];
             if (typeof res['meet-bouncer'] !== 'undefined')
@@ -79,15 +80,20 @@ function resetAutoLeave() {
 }
 
 function addListItem(tab) {
-    let listItem = document.createElement('li');
-    listItem.innerHTML = `meet.google.com/${tab['target_url'].match(codeRegex)[0]} ${t} lim: ${tab['threshold']};`;
-    listItem.style.cursor = 'pointer';
-    listItem.setAttribute('data-tabId', tab["target_id"]);
-    listItem.addEventListener('click', function() {
-        let tabId = parseInt(this.getAttribute('data-tabId'));
-        chrome.tabs.update(tabId, {active: true});
+    chrome.tabs.sendMessage(tab.target_id, { action: "check_visibility" }, function (response) {
+        let listItem = document.createElement('li');
+        listItem.innerHTML = `<span class="left-part">meet.google.com/${tab['target_url'].match(codeRegex)[0]}</span><span class="right-part">lim: ${tab['threshold']}</span>`;
+        if (response && !response.isVisible) 
+            listItem.className = "orange";
+        listItem.style.cursor = 'pointer';
+        listItem.setAttribute('data-tabId', tab["target_id"]);
+        listItem.addEventListener('click', function() {
+            let tabId = parseInt(this.getAttribute('data-tabId'));
+            chrome.tabs.update(tabId, {active: true});
+        });
+        document.querySelector('#active_tabs_list').appendChild(listItem);
+        return listItem
     });
-    document.querySelector('#active_tabs_list').appendChild(listItem);
 }
 
 function addNoActiveCalls() {
@@ -102,8 +108,6 @@ const sliderValueDisplay = document.querySelector('.slider-value');
 function updateSliderValue() {
     sliderValueDisplay.textContent = `Participants: ${slider.value}`;
 }
-
-
 
 slider.addEventListener('input', updateSliderValue);
 setButton.addEventListener('click', setAutoLeave);

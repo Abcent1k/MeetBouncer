@@ -47,7 +47,7 @@ function processPopUpMessage(request, sender, sendResponse) {
                         if (typeof found_tab !== 'undefined') {
                             chrome.storage.session.set({ 'meet-bouncer': mbArray.filter(item => item.target_id !== tab[0].id) });
                             chrome.action.setBadgeText({ text: "" + request.threshold, tabId: tab[0].id });
-                            chrome.tabs.sendMessage(tab[0].id, { action: "changeThreshold", threshold: request.threshold });
+                            chrome.tabs.sendMessage(tab[0].id, { action: "change_threshold", threshold: request.threshold });
 
                             res = { target_url: tab[0].url, threshold: request.threshold, target_id: tab[0].id }
                             sendResponse(res);

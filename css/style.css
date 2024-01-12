@@ -31,6 +31,11 @@ h2 {
   margin-bottom: 0px;
 }
 
+#active_tabs_list li {
+  display: flex;
+  justify-content: space-between; /* Распределяет пространство между элементами */
+}
+
 ul {
   margin-top: 8px;
   box-sizing: border-box;
@@ -47,6 +52,10 @@ ul {
 
 ul li:not(:last-child) {
   margin-bottom: 8px;
+}
+
+.orange {
+  color: orange;
 }
 
 .participants-control {

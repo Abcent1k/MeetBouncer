@@ -47,6 +47,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         const isVisible = document.visibilityState === "visible";
         sendResponse({ isVisible: isVisible });
     }
+    if (request.action === "change_threshold") {
+        threshold = request.threshold;
+        console.log("Threshold changed");
+    }
+    if (request.action === "reset_extension") {
+        clearInterval(intervalId)
+        console.log("Extension reset on this tab");
+    }
 });
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
