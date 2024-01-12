@@ -1,5 +1,6 @@
 var threshold;
 var intervalId;
+var isPaused = false;
 
 chrome.runtime.sendMessage({ msg: "get-threshold" }, function (response) {
     threshold = response.threshold
@@ -19,20 +20,22 @@ chrome.runtime.sendMessage({ msg: "get-threshold" }, function (response) {
         });
 
         intervalId = setInterval(function () {
-            let numParticipants = parseInt(document.getElementsByClassName('uGOf1d')[0].innerHTML);
-            console.log('Threshold: ' + threshold + "\n" + 'Current participants: ' + numParticipants)
+            if (!isPaused) {
+                let numParticipants = parseInt(document.getElementsByClassName('uGOf1d')[0].innerHTML);
+                console.log('Threshold: ' + threshold + "\n" + 'Current participants: ' + numParticipants)
 
-            if (numParticipants <= threshold) {
-                console.log("Threshold met.. user will now leave the google meet")
+                if (numParticipants <= threshold) {
+                    console.log("Threshold met.. user will now leave the google meet")
 
-                for (i of document.getElementsByTagName('i')) {
-                    if (i.innerHTML == 'call_end')
-                        i.click()
+                    for (i of document.getElementsByTagName('i')) {
+                        if (i.innerHTML == 'call_end')
+                            i.click()
+                    }
+                    console.log("User left the call")
+                    chrome.runtime.sendMessage({ msg: 'check_close_meet', tab_id: tab_id });
+
+                    clearInterval(intervalId)
                 }
-                console.log("User left the call")
-                chrome.runtime.sendMessage({ msg: 'check_close_meet', tab_id: tab_id });
-
-                clearInterval(intervalId)
             }
         }, 8000);
     }
@@ -52,8 +55,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         console.log("Threshold changed");
     }
     if (request.action === "reset_extension") {
-        clearInterval(intervalId)
+        isPaused = true;
         console.log("Extension reset on this tab");
+    }
+    if (request.action === "activate_extension") {
+        isPaused = false;
+        console.log("Extension activated on this tab");
+        sendResponse(true);
     }
 });
 

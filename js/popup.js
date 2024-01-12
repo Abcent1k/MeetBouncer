@@ -9,20 +9,13 @@ const t = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
 window.onload = function () {
     chrome.storage.session.get(['meet-bouncer'], function (res) {
         if (typeof res !== 'undefined') {
-            if (typeof res['meet-bouncer'] === 'undefined' || res['meet-bouncer'].length === 0)
-                addNoActiveCalls();
-            else {
-                tab_container.innerHTML = "";
-                res['meet-bouncer'].forEach(function (item) {
-                    addListItem(item);
-                });
-            }
+            drawActiveCalls(res['meet-bouncer']);
         }
         updateSliderValue();
     })
 }
 
-function setAutoLeave() {
+function activateExtension() {
     let threshold = document.getElementById('participants-slider').value;
     if (parseInt(threshold) > 0) {
         chrome.runtime.sendMessage({ msg: 'set-auto-leave', threshold: threshold }, function (response) {
@@ -46,50 +39,56 @@ function setAutoLeave() {
                     });
                     chrome.storage.session.set({ 'meet-bouncer': mbArray });
 
-                    tab_container.innerHTML = "";
-                    mbArray.forEach(function (item) {
-                        addListItem(item);
-                    });
+                    drawActiveCalls(mbArray);
                 });
             }
         });
     }
 }
 
-function resetAutoLeave() {
+function resetExtension() {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tab) {
-        chrome.runtime.sendMessage({ msg: 'check_close_meet', tab_id: tab[0].id });
-        chrome.tabs.sendMessage(tab[0].id, { action: "reset_extension"});
-        chrome.storage.session.get(['meet-bouncer'], function (res) {
-            let mbArray = [];
-            if (typeof res['meet-bouncer'] !== 'undefined')
-                mbArray = res['meet-bouncer'];
-
-            mbArray = mbArray.filter(item => item.target_id !== tab[0].id);
-
-            tab_container.innerHTML = "";
-
-            if (mbArray.length === 0)
-                addNoActiveCalls();
-
-            mbArray.forEach(function (item) {
-                addListItem(item);
-            });
+        chrome.runtime.sendMessage({ msg: 'check_close_meet', tab_id: tab[0].id }, function (response) {
+            chrome.runtime.sendMessage({ msg: 'log_message', message: response})
+            if (!response)
+                return;
+            chrome.tabs.sendMessage(tab[0].id, { action: "reset_extension" });
+                chrome.storage.session.get(['meet-bouncer'], function (res) {
+                    let mbArray = [];
+                    if (typeof res['meet-bouncer'] !== 'undefined')
+                        mbArray = res['meet-bouncer'];
+    
+                    drawActiveCalls(mbArray.filter(item => item.target_id !== tab[0].id));
+                });
         });
     });
+}
+
+function drawActiveCalls(mbArray) {
+    tab_container.innerHTML = "";
+    if (typeof mbArray === 'undefined' || mbArray.length === 0)
+        addNoActiveCalls();
+    else {
+        // mbArray.sort((a, b) => {
+        //     a.target_id <= b.target_id ? -1 : 1;
+        // });
+        mbArray.forEach(function (item) {
+            addListItem(item);
+        });
+    }
 }
 
 function addListItem(tab) {
     chrome.tabs.sendMessage(tab.target_id, { action: "check_visibility" }, function (response) {
         let listItem = document.createElement('li');
         listItem.innerHTML = `<span class="left-part">meet.google.com/${tab['target_url'].match(codeRegex)[0]}</span><span class="right-part">lim: ${tab['threshold']}</span>`;
-        if (response && !response.isVisible) 
+        if (response && !response.isVisible)
             listItem.className = "orange";
         listItem.style.cursor = 'pointer';
         listItem.setAttribute('data-tabId', tab["target_id"]);
-        listItem.addEventListener('click', function() {
+        listItem.addEventListener('click', function () {
             let tabId = parseInt(this.getAttribute('data-tabId'));
-            chrome.tabs.update(tabId, {active: true});
+            chrome.tabs.update(tabId, { active: true });
         });
         document.querySelector('#active_tabs_list').appendChild(listItem);
         return listItem
@@ -110,5 +109,5 @@ function updateSliderValue() {
 }
 
 slider.addEventListener('input', updateSliderValue);
-setButton.addEventListener('click', setAutoLeave);
-resetButton.addEventListener('click', resetAutoLeave);
+setButton.addEventListener('click', activateExtension);
+resetButton.addEventListener('click', resetExtension);

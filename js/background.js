@@ -30,10 +30,7 @@ function setIcon(activeFlag) {
     }
 }
 
-function processPopUpMessage(request, sender, sendResponse) {
-    /*
-        process sendMessage from popup.js and content.js
-    */
+function extensionActivation(request, sender, sendResponse) {
     if (request.msg == 'set-auto-leave') {
         console.log("background.js received a click event message from popup.js for " + request.msg)
         chrome.tabs.query({ active: true, currentWindow: true }, function (tab) {
@@ -54,9 +51,13 @@ function processPopUpMessage(request, sender, sendResponse) {
                             return true;
                         }
                     }
-                    chrome.scripting.executeScript({
-                        target: { tabId: tab[0].id },
-                        files: ["./js/googlemeet.js"],
+                    chrome.tabs.sendMessage(tab[0].id, { action: "activate_extension" }, function (response) {
+                        if (chrome.runtime.lastError) {
+                            chrome.scripting.executeScript({
+                                target: { tabId: tab[0].id },
+                                files: ["./js/googlemeet.js"],
+                            });
+                        }
                     });
                 });
 
@@ -64,11 +65,9 @@ function processPopUpMessage(request, sender, sendResponse) {
             }
             sendResponse(res);
         });
-
-        return true;
     }
 
-    if (request.msg == 'get-threshold') {
+    else if (request.msg == 'get-threshold') {
         chrome.storage.session.get(['meet-bouncer'], function (res) {
             let meetTabs = res['meet-bouncer'];
             if (typeof meetTabs !== 'undefined' && meetTabs.length !== 0) {
@@ -81,57 +80,49 @@ function processPopUpMessage(request, sender, sendResponse) {
                 });
             }
         });
-
-        return true;
     }
 
-    if (request.msg == "extension_activation") {
+    else if (request.msg == "extension_activation") {
         checkTabsVisibility();
         chrome.action.setBadgeText({ text: "" + request.threshold, tabId: request.tab_id });
-        return true;
     }
 
-    if (request.msg == "set_badge") {
+    else if (request.msg == "set_badge")
         chrome.action.setBadgeText({ text: "" + request.threshold, tabId: request.tab_id });
-        return true;
-    }
 
-    if (request.msg == "activate_icon") {
+    else if (request.msg == "activate_icon")
         setIcon("active");
-        return true;
-    }
 
-    if (request.msg == "disable_icon") {
+    else if (request.msg == "disable_icon")
         setIcon("disabled");
-        return true;
-    }
 
-    if (request.msg == "inactivate_icon") {
+    else if (request.msg == "inactivate_icon")
         setIcon("inactive");
-        return true;
+
+    else if (request.msg == 'check_close_meet')
+    {
+        checkTabAction(request.tab_id, function(result) {
+            sendResponse(result);
+        });
     }
 
-    if (request.msg == 'check_close_meet') {
-        checkTabAction(request.tab_id);
-        return true;
-    }
-
-    if (request.msg == 'check_tabs_visibility') {
+    else if (request.msg == 'check_tabs_visibility')
         checkTabsVisibility();
-        return true;
-    }
+
+    else if (request.msg == "log_message")
+        console.log(request.message);
 
     return true;
 }
 
-function checkTabAction(tab_id) {
+function checkTabAction(tab_id, callback) {
     chrome.storage.session.get(['meet-bouncer'], function (res) {
         let meetTabs = res['meet-bouncer'];
 
         if (typeof meetTabs === 'undefined' || meetTabs.length === 0 ||
             typeof meetTabs.find(item => item.target_id === tab_id) === 'undefined') {
             console.log("This tab is not included in meetTabs");
-            return false;
+            callback(false);
         } else {
             meetTabs = meetTabs.filter(item => item.target_id !== tab_id);
             chrome.storage.session.set({ 'meet-bouncer': meetTabs })
@@ -140,6 +131,7 @@ function checkTabAction(tab_id) {
                 console.log("No more extension tabs, set the disabled icon");
                 setIcon("disabled");
             }
+            callback(true);
         }
     });
 }
@@ -187,4 +179,4 @@ function checkTabsVisibility() {
 
 chrome.tabs.onRemoved.addListener(checkTabAction)
 chrome.tabs.onUpdated.addListener(checkTabUpdated)
-chrome.runtime.onMessage.addListener(processPopUpMessage)
+chrome.runtime.onMessage.addListener(extensionActivation)
