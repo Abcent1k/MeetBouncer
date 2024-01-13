@@ -1,17 +1,15 @@
 var threshold;
 var intervalId;
 var isPaused = false;
+var tab_id;
+var tab_url;
 
-chrome.runtime.sendMessage({ msg: "get-threshold" }, function (response) {
+chrome.runtime.sendMessage({ msg: "get-info" }, function (response) {
     threshold = response.threshold
     tab_id = response.target_id
     tab_url = response.target_url
 
-
     if (document.getElementsByClassName('uGOf1d').length <= 0) {
-        /*
-            user have not enter the room.
-        */
         alert("Please make sure you have already joined the room!")
     } else {
         chrome.runtime.sendMessage({msg: 'extension_activation',
@@ -50,24 +48,28 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         const isVisible = document.visibilityState === "visible";
         sendResponse({ isVisible: isVisible });
     }
-    if (request.action === "change_threshold") {
+    else if (request.action === "change_threshold") {
         threshold = request.threshold;
+        chrome.runtime.sendMessage({msg: 'set_badge',
+            threshold: threshold,
+            tab_id: tab_id
+        });
+        chrome.runtime.sendMessage({action: 'redraw_active_tabs_list'});
         console.log("Threshold changed");
     }
-    if (request.action === "reset_extension") {
+    else if (request.action === "reset_extension") {
         isPaused = true;
+        chrome.runtime.sendMessage({action: 'redraw_active_tabs_list'});
         console.log("Extension reset on this tab");
     }
-    if (request.action === "activate_extension") {
+    else if (request.action === "activate_extension") {
         isPaused = false;
+        chrome.runtime.sendMessage({msg: 'extension_activation',
+            threshold: threshold,
+            tab_id: tab_id
+        });
+        chrome.runtime.sendMessage({action: 'redraw_active_tabs_list'});
         console.log("Extension activated on this tab");
         sendResponse(true);
-    }
-});
-
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === "changeThreshold") {
-        threshold = request.threshold;
-        console.log("Threshold changed");
     }
 });
