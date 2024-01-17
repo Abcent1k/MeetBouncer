@@ -102,13 +102,13 @@ function updateSliderValue() {
     sliderValueDisplay.textContent = `Participants: ${slider.value}`;
 }
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener((request) => {
     if (request.action === "redraw_active_tabs_list") {
-        chrome.storage.session.get(['meet-bouncer'], function (res) {
+        chrome.storage.session.get(['meet-bouncer'], (res) => {
             if (typeof res !== 'undefined') {
                 redrawActiveCalls(res['meet-bouncer']);
             }
-        })
+        });
     }
 })
 

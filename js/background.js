@@ -39,8 +39,10 @@ function messageListener(request, sender, sendResponse) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tab) => {
             let meetTab = "wrong tab";
 
-            if (meetRegex.test(tab[0].url))
+            if (meetRegex.test(tab[0].url)) {
                 meetTab = tab[0];
+                sendResponse(meetTab);
+            }
             else {
                 sendResponse("wrong tab");
                 return;
@@ -85,6 +87,7 @@ function messageListener(request, sender, sendResponse) {
                 });
             });
         });
+        return true;
     }
 
     else if (request.action === 'get-info') {
@@ -108,14 +111,17 @@ function messageListener(request, sender, sendResponse) {
                 });
             }
         });
+        return true;
     }
 
     else if (request.action === "reset_auto_leave") {
         chrome.tabs.query({ active: true, currentWindow: true }, (tab) => {
             let meetTab = "wrong tab";
 
-            if (meetRegex.test(tab[0].url))
+            if (meetRegex.test(tab[0].url)) {
                 meetTab = tab[0];
+                sendResponse(meetTab);
+            }
             else {
                 sendResponse("wrong tab");
                 return;
@@ -125,6 +131,7 @@ function messageListener(request, sender, sendResponse) {
 
             chrome.tabs.sendMessage(meetTab.id, { action: "reset_extension" })
         });
+        return true;
     }
 
     else if (request.action === "extension_activation") {
@@ -152,8 +159,6 @@ function messageListener(request, sender, sendResponse) {
 
     else if (request.action == "log_message")
         console.log(request.message);
-
-    return true;
 }
 
 function checkTabAction(tab_id) {
@@ -203,7 +208,12 @@ function checkTabsVisibility() {
 
                     if (index === array.length - 1) {
                         setTimeout(() => {
-                            chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
+                            chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' }, () => {
+                                if (chrome.runtime.lastError) {
+                                    console.log("Error when checking that tabs are active: ",
+                                        chrome.runtime.lastError.message);
+                                }
+                            });
                             if (activeTabsCount === meetTabs.length) {
                                 console.log("All tabs with the extension are active, set the active icon");
                                 setIcon("active");
