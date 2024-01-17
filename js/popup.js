@@ -16,24 +16,29 @@ window.onload = function () {
 function activateExtension() {
     let threshold = document.getElementById('participants-slider').value;
     if (parseInt(threshold) > 0) {
-        chrome.runtime.sendMessage({ action: 'set-auto-leave', threshold: threshold }, (response) => {
-            if (!response)
-                console.log(chrome.runtime.lastError.message)
+        chrome.runtime.sendMessage(
+            { action: 'set_auto_leave', threshold: threshold },
+            (response) => {
+                if (!response)
+                    console.log(chrome.runtime.lastError.message)
 
-            else if (response === "wrong tab")
-                alert("Please make sure you are on the google meet tab!")
-        });
+                else if (response === "wrong tab")
+                    alert("Please make sure you are on the google meet tab!")
+            }
+        );
     }
 }
 
 function resetExtension() {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tab) {
-        chrome.runtime.sendMessage({ action: 'check_close_meet', tab_id: tab[0].id }, (response) => {
-            if (!response)
-                return;
+    chrome.runtime.sendMessage({ action: 'reset_auto_leave'}, (response) => {
+        if (!response)
+            console.log(chrome.runtime.lastError.message)
 
-            chrome.tabs.sendMessage(tab[0].id, { action: "reset_extension" });
-        });
+        else if (response === "wrong tab")
+        {
+            //alert("Please make sure you are on the google meet tab!")
+            //Maybe change the style of the button?
+        }
     });
 }
 
