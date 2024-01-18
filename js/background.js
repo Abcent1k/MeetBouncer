@@ -1,5 +1,6 @@
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/;
 const codeRegex = /\w{3}-\w{4}-\w{3}/;
+const notificationId = "1";
 
 chrome.runtime.onInstalled.addListener(() => {
     chrome.action.setBadgeBackgroundColor({ color: [255, 0, 0, 255] });
@@ -139,7 +140,8 @@ function checkTabAction(tab_id) {
             typeof meetTabs.find(item => item.target_id === tab_id) === 'undefined') {
 
             console.log("This tab is not included in meetTabs");
-        } else {
+        } 
+        else {
             meetTabs = meetTabs.filter(item => item.target_id !== tab_id);
             chrome.storage.session.set({ 'meet-bouncer': meetTabs });
             chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
@@ -147,6 +149,9 @@ function checkTabAction(tab_id) {
             if (meetTabs.length === 0) {
                 console.log("No more extension tabs, set the disabled icon");
                 setIcon("disabled");
+            }
+            else {
+                checkTabsVisibility();
             }
         }
     });
@@ -167,6 +172,7 @@ function checkTabsVisibility() {
 
         let activeTabsCount = 0;
         setTimeout(() => {
+            let inactiveTabs = [];
             meetTabs.forEach((dict, index, array) => {
                 chrome.tabs.sendMessage(dict.target_id, { action: "check_visibility" }, (response) => {
                     if (chrome.runtime.lastError) {
@@ -175,6 +181,8 @@ function checkTabsVisibility() {
                     }
                     if (response?.isVisible)
                         activeTabsCount++;
+                    else 
+                        inactiveTabs.push(dict);
 
                     if (index === array.length - 1) {
                         setTimeout(() => {
@@ -187,9 +195,21 @@ function checkTabsVisibility() {
                             if (activeTabsCount === meetTabs.length) {
                                 console.log("All tabs with the extension are active, set the active icon");
                                 setIcon("active");
+                                clearNotification();
                             } else {
                                 console.log("Not all tabs with the extension are active, set the inactive icon");
                                 setIcon("inactive");
+                                let messageText = "";
+                                let contextText = "";
+                                if (inactiveTabs.length === 1) {
+                                    messageText = "Google Meet tab is inactive.";
+                                    contextText = `${inactiveTabs[0].target_url.match(codeRegex)[0]};`;
+                                } else {
+                                    inactiveTabs.forEach(
+                                        (element) => contextText += `${element.target_url.match(codeRegex)[0]}; `)
+                                    messageText = "Google Meet tabs is inactive.";
+                                }
+                                notification(messageText, contextText);
                             }
                         }, 10);
                     }
@@ -198,6 +218,24 @@ function checkTabsVisibility() {
         }, 10);
     });
 }
+
+function notification(message, contextMessage) {
+    chrome.notifications.create(notificationId, {
+        type: 'basic',
+        iconUrl: '../img/mb-128.png',
+        title: 'MeetBouncer',
+        message: message,
+        contextMessage: contextMessage
+    }, () => {
+        console.log('Notification create');
+    });
+}
+
+function clearNotification() {
+    chrome.notifications.clear(notificationId, (response) => {
+        if (response)
+        console.log('Notification deleted');
+    });}
 
 chrome.tabs.onRemoved.addListener(checkTabAction)
 chrome.tabs.onUpdated.addListener(checkTabUpdated)

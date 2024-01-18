@@ -35,7 +35,7 @@ chrome.storage.local.get(['mb_temp'], (res) => {
                 if (numParticipants <= threshold) {
                     console.log("Threshold met. User will now leave the google meet");
 
-                    for (i of document.getElementsByTagName('i')) {
+                    for (let i of document.getElementsByTagName('i')) {
                         if (i.innerHTML == 'call_end')
                             i.click();
                     }
@@ -45,7 +45,7 @@ chrome.storage.local.get(['mb_temp'], (res) => {
                     clearInterval(intervalId);
                 }
             }
-        }, 8000);
+        }, 5000);
     }
 });
 
