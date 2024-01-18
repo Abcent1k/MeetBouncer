@@ -3,21 +3,25 @@ const codeRegex = /\w{3}-\w{4}-\w{3}/
 const setButton = document.getElementById('setButton');
 const resetButton = document.getElementById('resetButton');
 const tabContainer = document.getElementById("active_tabs_list")
+let currentTab;
 
-window.onload = function () {
+window.onload = () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        currentTab = tabs[0];
+    });
     chrome.storage.session.get(['meet-bouncer'], (res) => {
         if (typeof res !== 'undefined')
             redrawActiveCalls(res['meet-bouncer']);
 
         updateSliderValue();
-    })
+    });
 }
 
 function activateExtension() {
     let threshold = document.getElementById('participants-slider').value;
     if (parseInt(threshold) > 0) {
         chrome.runtime.sendMessage(
-            { action: 'set_auto_leave', threshold: threshold },
+            { action: 'set_auto_leave', threshold: threshold, tab: currentTab },
             (response) => {
                 if (!response)
                     console.log(chrome.runtime.lastError.message)
@@ -30,16 +34,17 @@ function activateExtension() {
 }
 
 function resetExtension() {
-    chrome.runtime.sendMessage({ action: 'reset_auto_leave'}, (response) => {
-        if (!response)
-            console.log(chrome.runtime.lastError.message)
+    chrome.runtime.sendMessage({ action: 'reset_auto_leave', tab: currentTab },
+        (response) => {
+            if (!response)
+                console.log(chrome.runtime.lastError.message)
 
-        else if (response === "wrong tab")
-        {
-            //alert("Please make sure you are on the google meet tab!")
-            //Maybe change the style of the button?
+            else if (response === "wrong tab") {
+                alert("Please make sure you are on the google meet tab!")
+                //Maybe change the style of the button?
+            }
         }
-    });
+    );
 }
 
 async function redrawActiveCalls(mbArray) {

@@ -36,102 +36,72 @@ function messageListener(request, sender, sendResponse) {
     if (request.action === 'set_auto_leave') {
         console.log("background.js received a click event message from popup.js for " + request.action)
 
-        chrome.tabs.query({ active: true, currentWindow: true }, (tab) => {
-            let meetTab = "wrong tab";
+        let meetTab;
 
-            if (meetRegex.test(tab[0].url)) {
-                meetTab = tab[0];
-                sendResponse(meetTab);
-            }
-            else {
-                sendResponse("wrong tab");
-                return;
-            }
+        if (meetRegex.test(request.tab.url))
+            meetTab = request.tab;
+        else {
+            sendResponse("wrong tab");
+            return;
+        }
 
-            chrome.storage.session.get(['meet-bouncer'], (res) => {
+        chrome.storage.session.get(['meet-bouncer'], (res) => {
 
-                let mbArray = [];
-                if (typeof res['meet-bouncer'] !== 'undefined' && res['meet-bouncer'].length !== 0) {
-                    mbArray = res['meet-bouncer'];
+            let mbArray = [];
+            if (typeof res['meet-bouncer'] !== 'undefined' && res['meet-bouncer'].length !== 0) {
+                mbArray = res['meet-bouncer'];
 
-                    if (typeof mbArray.find(item => item.target_id === meetTab.id) !== 'undefined') {
-                        for (let item of mbArray) {
-                            if (item.target_id === meetTab.id) {
-                                item.threshold = request.threshold;
-                                break;
-                            }
+                if (typeof mbArray.find(item => item.target_id === meetTab.id) !== 'undefined') {
+                    for (let item of mbArray) {
+                        if (item.target_id === meetTab.id) {
+                            item.threshold = request.threshold;
+                            break;
                         }
-                        chrome.storage.session.set({ 'meet-bouncer': mbArray });
-
-                        chrome.tabs.sendMessage(meetTab.id, {
-                            action: "change_threshold",
-                            threshold: request.threshold
-                        });
-                        return;
                     }
-                }
-                chrome.tabs.sendMessage(meetTab.id, { action: "activate_extension" }, () => {
-                    mbArray.push({
-                        'threshold': request.threshold,
-                        'target_url': meetTab.url,
-                        'target_id': meetTab.id,
-                    });
                     chrome.storage.session.set({ 'meet-bouncer': mbArray });
 
-                    if (chrome.runtime.lastError) {
-                        chrome.scripting.executeScript({
-                            target: { tabId: meetTab.id },
-                            files: ["./js/googlemeet.js"],
-                        });
-                    }
-                });
+                    chrome.tabs.sendMessage(meetTab.id, {
+                        action: "change_threshold",
+                        threshold: request.threshold
+                    });
+                    return;
+                }
+            }
+            chrome.tabs.sendMessage(meetTab.id, { action: "activate_extension" }, () => {
+                let mbItem = {
+                    'threshold': request.threshold,
+                    'target_url': meetTab.url,
+                    'target_id': meetTab.id,
+                };
+                mbArray.push(mbItem);
+                chrome.storage.session.set({ 'meet-bouncer': mbArray });
+
+                if (chrome.runtime.lastError) {
+
+                    chrome.storage.local.set({ 'mb_temp': mbItem });
+
+                    chrome.scripting.executeScript({
+                        target: { tabId: meetTab.id },
+                        files: ["./js/googlemeet.js"],
+                    });
+                }
             });
         });
-        return true;
-    }
-
-    else if (request.action === 'get-info') {
-        chrome.storage.session.get(['meet-bouncer'], (res) => {
-            let mbArray = res['meet-bouncer'];
-
-            if (typeof mbArray !== 'undefined' && mbArray.length !== 0) {
-
-                chrome.tabs.query({ active: true, currentWindow: true }, (tab) => {
-                    let found_tab = mbArray.find(item => item.target_id === tab[0].id);
-
-                    if (typeof found_tab !== 'undefined') {
-                        console.log("Get-info from " + found_tab['target_url'])
-                        result = { target_url: tab[0].url, threshold: found_tab["threshold"], target_id: tab[0].id }
-                    }
-                    else {
-                        result = "error"
-                    }
-
-                    sendResponse(result);
-                });
-            }
-        });
-        return true;
     }
 
     else if (request.action === "reset_auto_leave") {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tab) => {
-            let meetTab = "wrong tab";
+        let meetTab;
 
-            if (meetRegex.test(tab[0].url)) {
-                meetTab = tab[0];
-                sendResponse(meetTab);
-            }
-            else {
-                sendResponse("wrong tab");
-                return;
-            }
+        if (meetRegex.test(request.tab.url))
+            meetTab = request.tab;
+        else {
+            sendResponse("wrong tab");
+            return;
+        }
 
-            checkTabAction(meetTab.id);
+        checkTabAction(meetTab.id);
 
-            chrome.tabs.sendMessage(meetTab.id, { action: "reset_extension" })
-        });
-        return true;
+        chrome.tabs.sendMessage(meetTab.id, { action: "reset_extension" })
     }
 
     else if (request.action === "extension_activation") {

@@ -3,19 +3,22 @@ var threshold;
 var tab_id;
 var tab_url;
 
-chrome.runtime.sendMessage({ action: "get-info" }, (response) => {
-    if (response === "error") {
-        console.warn("Something went wrong with getting info");
-        return;
-    }
-    threshold = response.threshold;
-    tab_id = response.target_id;
-    tab_url = response.target_url;
+chrome.storage.local.get(['mb_temp'], (res) => {
+    if (typeof res['mb_temp'] === 'undefined')
+        console.log("Something went wrong. The content script can't get the data.");
+
+    let mb_temp = res['mb_temp'];
+    tab_id = mb_temp.target_id;
+    tab_url = mb_temp.target_url;
+    threshold = mb_temp.threshold;
+
+    chrome.storage.local.remove('mb_temp');
 
     if (document.getElementsByClassName('uGOf1d').length <= 0) {
         alert("Please make sure you have already joined the room!");
-    } 
+    }
     else {
+
         chrome.runtime.sendMessage({
             action: 'extension_activation',
             threshold: threshold,
@@ -26,7 +29,7 @@ chrome.runtime.sendMessage({ action: "get-info" }, (response) => {
             if (!isPaused) {
                 let numParticipants = parseInt(
                     document.getElementsByClassName('uGOf1d')[0].innerHTML
-                    );
+                );
                 console.log(`Threshold: ${threshold}\nCurrent participants: ${numParticipants}`);
 
                 if (numParticipants <= threshold) {
@@ -46,8 +49,9 @@ chrome.runtime.sendMessage({ action: "get-info" }, (response) => {
     }
 });
 
+
 document.addEventListener("visibilitychange", () => {
-    chrome.runtime.sendMessage({action: 'check_tabs_visibility'});
+    chrome.runtime.sendMessage({ action: 'check_tabs_visibility' });
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -62,12 +66,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             threshold: threshold,
             tab_id: tab_id
         });
-        chrome.runtime.sendMessage({action: 'redraw_active_tabs_list'});
+        chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Threshold changed");
     }
     else if (request.action === "reset_extension") {
         isPaused = true;
-        chrome.runtime.sendMessage({action: 'redraw_active_tabs_list'});
+        chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Extension reset on this tab");
     }
     else if (request.action === "activate_extension") {
@@ -77,7 +81,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             threshold: threshold,
             tab_id: tab_id
         });
-        chrome.runtime.sendMessage({action: 'redraw_active_tabs_list'});
+        chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Extension activated on this tab");
         sendResponse(true);
     }
