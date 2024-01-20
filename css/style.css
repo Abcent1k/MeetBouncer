@@ -5,9 +5,6 @@ body {
   margin: 0px;
   color: white;
   background-color: #1e2a37;
-
-  /* display: flex;
-  flex-direction: column; */
   font-family: 'Open Sans', sans-serif;
 }
 
@@ -16,6 +13,22 @@ h1 {
   color: #22c55d;
   font-weight: 700;
   font-size: 24px;
+}
+
+.title-block {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.icon-style {
+  height: 20px;
+  width: 20px;
+  stroke: currentColor;
+}
+
+#settingsButton { 
+  line-height: 0px;
 }
 
 #info {
@@ -31,9 +44,9 @@ h2 {
   margin-bottom: 0px;
 }
 
-#active_tabs_list li {
+#activeTabsList li {
   display: flex;
-  justify-content: space-between; /* Распределяет пространство между элементами */
+  justify-content: space-between;
 }
 
 ul {
@@ -88,16 +101,6 @@ ul li:not(:last-child) {
   border: 0;
 }
 
-/* .slider::-moz-range-thumb {
-  height: 15px;
-  width: 15px;
-  background-color: #22c55d;
-  appearance: none;
-  cursor: pointer;
-  border-radius: 15px;
-  border: 0;
-} */
-
 .slider-labels {
   color: #d1d5db;
   font-family: 'Noto Sans Indic Siyaq Numbers', sans-serif;
@@ -121,12 +124,15 @@ ul li:not(:last-child) {
   flex: 1; 
 }
 
+.modal-content .settings-container:not(:first-child) {
+  padding-top: 10px;
+}
+
 button {
   appearance: none;
   background-color: #22c55d;
   border: 0;
   border-radius: 6px;
-  box-shadow: rgba(27, 31, 35, .1) 0 1px 0;
   box-sizing: border-box;
   color: #27272a;
   cursor: pointer;
@@ -134,7 +140,7 @@ button {
   font-size: 14px;
   font-weight: 500;
   line-height: 22px;
-  padding: 6px 16px;
+  padding: 6px 10px;
   position: relative;
   text-align: center;
   text-decoration: none;
@@ -145,20 +151,16 @@ button {
   white-space: nowrap;
 }
 
-#setButton {
-  background-color: #22c55d;
-}
-
-#setButton:hover {
+button:hover {
   background-color: white;
 }
 
-#resetButton {
+.button-dark {
   background-color: #374151;
   color: #22c55d;
 }
 
-#resetButton:hover {
+.button-dark:hover {
   background-color: #27272a;
   color: white;
 }
@@ -168,14 +170,112 @@ button:active {
 }
 
 
-/* Chrome, Safari, Edge, Opera */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+#modal {
+  display: none; /* Скрыть модальное окно по умолчанию */
+  position: fixed; /* Оставаться на месте при прокрутке */
+  z-index: 1; /* Сидеть над другим контентом */
+  right: 0;
+  top: 0;
+  width: 100%; /* Полная ширина */
+  height: 100%; /* Полная высота */
+  background-color: rgba(0,0,0,0.4); /* Черный с небольшой прозрачностью */
 }
 
-/* Firefox
-input[type=number] {
-  -moz-appearance: textfield;
-} */
+.modal-content {
+  float: right;
+  margin-top: 50px;
+  margin-right: 15px;
+  padding: 15px;
+  border: 0px;
+  border-radius: 6px;
+  width: 208px;
+  height: auto;
+  color: white;
+  background-color: #1e2a37;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 15px;
+}
+
+
+#notificationCheckbox {
+  display: none;
+}
+
+.checkbox-label,
+.checkbox-label::before,
+.checkbox-label::after {
+  transition: all .3s;
+}
+
+.checkbox-label {
+  display: inline-block;
+  position: relative;
+  top: 3px;
+  left: 4px;
+  width: 36px;
+  height: 17px;
+  border-radius: 9px;
+  cursor: pointer;
+  background-color: #595a61;
+}
+/* slider styles */
+.checkbox-label::after {
+  border-radius: 50%;
+  content: '';
+  position: absolute;
+  top: 2px; 
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  background-color: white;
+}
+
+#notificationCheckbox:checked+.checkbox-label {
+  background-color: rgb(0, 165, 0);
+}
+
+#notificationCheckbox:checked+.checkbox-label::after {
+  left: 21px;
+}
+
+/* Remove arrows */
+#thresholdDefaultInput::-webkit-inner-spin-button, 
+#thresholdDefaultInput::-webkit-outer-spin-button { 
+  -webkit-appearance: none;
+  margin: 0; 
+}
+
+#thresholdDefaultInput {
+  position: relative;
+  top: 1px;
+  width: 32px;
+  border-radius: 6px;
+  border: 0;
+  background-color: #595a61;
+  color: white;
+  height: 32px;
+  font-size: large;
+  text-align: center;
+}
+
+#thresholdDefaultInput:focus {
+  outline: none;
+}
+
+#minusThresholdButton, #plusThresholdButton {
+  width: 35px;
+  font-size: 20px;
+}
+
+#minusThresholdButton {
+  margin-right: 5px;
+}
+
+#plusThresholdButton {
+  margin-left: 5px;
+}
+
+#setThresholdButton {
+  width: 50px;
+  float: right;
+}

@@ -46,11 +46,11 @@ function messageListener(request, sender, sendResponse) {
             return;
         }
 
-        chrome.storage.session.get(['meet-bouncer'], (res) => {
+        chrome.storage.session.get(['meet_bouncer'], (res) => {
 
             let mbArray = [];
-            if (typeof res['meet-bouncer'] !== 'undefined' && res['meet-bouncer'].length !== 0) {
-                mbArray = res['meet-bouncer'];
+            if (typeof res['meet_bouncer'] !== 'undefined' && res['meet_bouncer'].length !== 0) {
+                mbArray = res['meet_bouncer'];
 
                 if (typeof mbArray.find(item => item.target_id === meetTab.id) !== 'undefined') {
                     for (let item of mbArray) {
@@ -59,7 +59,7 @@ function messageListener(request, sender, sendResponse) {
                             break;
                         }
                     }
-                    chrome.storage.session.set({ 'meet-bouncer': mbArray });
+                    chrome.storage.session.set({ 'meet_bouncer': mbArray });
 
                     chrome.tabs.sendMessage(meetTab.id, {
                         action: "change_threshold",
@@ -75,7 +75,7 @@ function messageListener(request, sender, sendResponse) {
                     'target_id': meetTab.id,
                 };
                 mbArray.push(mbItem);
-                chrome.storage.session.set({ 'meet-bouncer': mbArray });
+                chrome.storage.session.set({ 'meet_bouncer': mbArray });
 
                 if (chrome.runtime.lastError) {
 
@@ -133,17 +133,17 @@ function messageListener(request, sender, sendResponse) {
 }
 
 function checkTabAction(tab_id) {
-    chrome.storage.session.get(['meet-bouncer'], (res) => {
-        let meetTabs = res['meet-bouncer'];
+    chrome.storage.session.get(['meet_bouncer'], (res) => {
+        let meetTabs = res['meet_bouncer'];
 
         if (typeof meetTabs === 'undefined' || meetTabs.length === 0 ||
             typeof meetTabs.find(item => item.target_id === tab_id) === 'undefined') {
 
             console.log("This tab is not included in meetTabs");
-        } 
+        }
         else {
             meetTabs = meetTabs.filter(item => item.target_id !== tab_id);
-            chrome.storage.session.set({ 'meet-bouncer': meetTabs });
+            chrome.storage.session.set({ 'meet_bouncer': meetTabs });
             chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
             chrome.action.setBadgeText({ text: "", tabId: tab_id });
             if (meetTabs.length === 0) {
@@ -164,8 +164,8 @@ function checkTabUpdated(tabId, changeInfo) {
 }
 
 function checkTabsVisibility() {
-    chrome.storage.session.get(['meet-bouncer'], (res) => {
-        let meetTabs = res['meet-bouncer'];
+    chrome.storage.session.get(['meet_bouncer'], (res) => {
+        let meetTabs = res['meet_bouncer'];
 
         if (typeof meetTabs === 'undefined' || meetTabs.length === 0)
             return;
@@ -181,7 +181,7 @@ function checkTabsVisibility() {
                     }
                     if (response?.isVisible)
                         activeTabsCount++;
-                    else 
+                    else
                         inactiveTabs.push(dict);
 
                     if (index === array.length - 1) {
@@ -199,17 +199,25 @@ function checkTabsVisibility() {
                             } else {
                                 console.log("Not all tabs with the extension are active, set the inactive icon");
                                 setIcon("inactive");
-                                let messageText = "";
-                                let contextText = "";
-                                if (inactiveTabs.length === 1) {
-                                    messageText = "Google Meet tab is inactive.";
-                                    contextText = `${inactiveTabs[0].target_url.match(codeRegex)[0]};`;
-                                } else {
-                                    inactiveTabs.forEach(
-                                        (element) => contextText += `${element.target_url.match(codeRegex)[0]}; `)
-                                    messageText = "Google Meet tabs is inactive.";
-                                }
-                                notification(messageText, contextText);
+                                chrome.storage.local.get(['mb_push_notifications'], (res) => {
+                                    if (res?.mb_push_notifications === false) {
+                                        clearNotification();
+                                        return;
+                                    }
+
+                                    let messageText = "";
+                                    let contextText = "";
+                                    if (inactiveTabs.length === 1) {
+                                        messageText = "Google Meet tab is inactive.";
+                                        contextText = `${inactiveTabs[0].target_url.match(codeRegex)[0]};`;
+                                    } else {
+                                        inactiveTabs.forEach(
+                                            (element) => contextText += `${element.target_url.match(codeRegex)[0]}; `)
+                                        messageText = "Google Meet tabs is inactive.";
+                                    }
+                                    notification(messageText, contextText);
+
+                                });
                             }
                         }, 10);
                     }
@@ -234,8 +242,9 @@ function notification(message, contextMessage) {
 function clearNotification() {
     chrome.notifications.clear(notificationId, (response) => {
         if (response)
-        console.log('Notification deleted');
-    });}
+            console.log('Notification deleted');
+    });
+}
 
 chrome.tabs.onRemoved.addListener(checkTabAction)
 chrome.tabs.onUpdated.addListener(checkTabUpdated)

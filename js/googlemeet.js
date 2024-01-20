@@ -27,9 +27,10 @@ chrome.storage.local.get(['mb_temp'], (res) => {
 
         let intervalId = setInterval(() => {
             if (!isPaused) {
-                let numParticipants = parseInt(
-                    document.getElementsByClassName('uGOf1d')[0].innerHTML
-                );
+                let numParticipantsElement = document.getElementsByClassName('uGOf1d')[0];
+                if (typeof numParticipantsElement === "undefined")
+                    return;
+                let numParticipants = parseInt(numParticipantsElement.innerHTML);
                 console.log(`Threshold: ${threshold}\nCurrent participants: ${numParticipants}`);
 
                 if (numParticipants <= threshold) {

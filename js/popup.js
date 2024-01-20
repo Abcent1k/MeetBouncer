@@ -1,19 +1,34 @@
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
 const codeRegex = /\w{3}-\w{4}-\w{3}/
-const setButton = document.getElementById('setButton');
-const resetButton = document.getElementById('resetButton');
-const tabContainer = document.getElementById("active_tabs_list")
+
+const slider = document.getElementById('participants-slider');
+const minusThresholdBtn = document.getElementById("minusThresholdButton");
+const plusThresholdBtn = document.getElementById("plusThresholdButton");
+const setDefaultThresholdBtn = document.getElementById("setThresholdButton");
 let currentTab;
 
 window.onload = () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
         currentTab = tabs[0];
     });
-    chrome.storage.session.get(['meet-bouncer'], (res) => {
+    chrome.storage.session.get(['meet_bouncer']).then((res) => {
         if (typeof res !== 'undefined')
-            redrawActiveCalls(res['meet-bouncer']);
-
+            redrawActiveCalls(res.meet_bouncer);
+    });
+    chrome.storage.local.get([
+        'mb_default_threshold',
+        'mb_push_notifications']
+    ).then((res) => {
+        if (typeof res?.mb_default_threshold !== 'undefined') {
+            slider.value = res.mb_default_threshold;
+            thresholdDefaultInput.value = res.mb_default_threshold;
+        }
         updateSliderValue();
+        if (typeof res?.mb_push_notifications !== 'undefined' &&
+            res.mb_push_notifications === false)
+            notificationCheckbox.checked = false;
+        else
+            notificationCheckbox.checked = true;
     });
 }
 
@@ -27,7 +42,7 @@ function activateExtension() {
                     console.log(chrome.runtime.lastError.message)
 
                 else if (response === "wrong tab")
-                    alert("Please make sure you are on the google meet tab!")
+                    alert("Please make sure you are on the google meet tab!");
             }
         );
     }
@@ -40,7 +55,7 @@ function resetExtension() {
                 console.log(chrome.runtime.lastError.message)
 
             else if (response === "wrong tab") {
-                alert("Please make sure you are on the google meet tab!")
+                alert("Please make sure you are on the google meet tab!");
                 //Maybe change the style of the button?
             }
         }
@@ -49,7 +64,7 @@ function resetExtension() {
 
 async function redrawActiveCalls(mbArray) {
     if (typeof mbArray === 'undefined' || mbArray.length === 0) {
-        tabContainer.innerHTML = "";
+        activeTabsList.innerHTML = "";
         addNoActiveCalls();
     } else {
         const fragment = document.createDocumentFragment();
@@ -60,8 +75,8 @@ async function redrawActiveCalls(mbArray) {
             const listItem = await createListItem(item);
             fragment.appendChild(listItem);
         }
-        tabContainer.innerHTML = "";
-        tabContainer.appendChild(fragment);
+        activeTabsList.innerHTML = "";
+        activeTabsList.appendChild(fragment);
     }
 }
 
@@ -77,14 +92,14 @@ async function createListItem(item) {
     });
 
     let listItem = document.createElement('li');
-    listItem.innerHTML = `<span class="left-part">meet.google.com/${item['target_url']
-        .match(codeRegex)[0]}</span><span class="right-part">lim: ${item['threshold']}</span>`;
+    listItem.innerHTML = `<span class="left-part">meet.google.com/${item.target_url
+        .match(codeRegex)[0]}</span><span class="right-part">lim: ${item.threshold}</span>`;
 
     if (!response.isVisible)
         listItem.className = "orange";
 
     listItem.style.cursor = 'pointer';
-    listItem.setAttribute('data-tabId', item["target_id"]);
+    listItem.setAttribute('data-tabId', item.target_id);
 
     listItem.addEventListener('click', () => {
         let tabId = parseInt(listItem.getAttribute('data-tabId'));
@@ -97,26 +112,71 @@ async function createListItem(item) {
 function addNoActiveCalls() {
     let listItem = document.createElement('li');
     listItem.innerHTML = `No active calls`;
-    document.querySelector('#active_tabs_list').appendChild(listItem);
+    activeTabsList.appendChild(listItem);
 }
 
-const slider = document.getElementById('participants-slider');
-const sliderValueDisplay = document.querySelector('.slider-value');
-
-function updateSliderValue() {
-    sliderValueDisplay.textContent = `Participants: ${slider.value}`;
-}
 
 chrome.runtime.onMessage.addListener((request) => {
     if (request.action === "redraw_active_tabs_list") {
-        chrome.storage.session.get(['meet-bouncer'], (res) => {
+        chrome.storage.session.get(['meet_bouncer']).then((res) => {
             if (typeof res !== 'undefined') {
-                redrawActiveCalls(res['meet-bouncer']);
+                redrawActiveCalls(res.meet_bouncer);
             }
         });
     }
-})
+});
+
+
+function updateSliderValue() {
+    sliderValue.textContent = `Participants: ${slider.value}`;
+}
+
+function minusThreshold() {
+    let currentThreshold = parseInt(thresholdDefaultInput.value);
+
+    if (currentThreshold <= 1)
+        thresholdDefaultInput.value = 1;
+    else if (currentThreshold > 100)
+        thresholdDefaultInput.value = 100;
+    else if (currentThreshold <= 100)
+        thresholdDefaultInput.value = parseInt(currentThreshold) - 1;
+}
+
+function plusThreshold() {
+    let currentThreshold = parseInt(thresholdDefaultInput.value);
+
+    if (currentThreshold < 1)
+        thresholdDefaultInput.value = 1;
+    else if (currentThreshold >= 100)
+        thresholdDefaultInput.value = 100;
+    else if (currentThreshold < 100)
+        thresholdDefaultInput.value = parseInt(currentThreshold) + 1;
+}
+
+function setDefaultThreshold() {
+    let thresholdDefault = thresholdDefaultInput.value;
+    if (thresholdDefault >= 1 && thresholdDefault <= 100) {
+        chrome.storage.local.set({ 'mb_default_threshold': thresholdDefault });
+        slider.value = thresholdDefault;
+        updateSliderValue();
+    }
+}
+
+settingsButton.addEventListener('click', () => { modal.style.display = "block"; });
+
+window.addEventListener('click', (event) => {
+    if (event.target == modal)
+        modal.style.display = "none";
+});
+
+notificationCheckbox.addEventListener('click', () => {
+    chrome.storage.local.set({ 'mb_push_notifications': notificationCheckbox.checked });
+    chrome.runtime.sendMessage({ action: 'check_tabs_visibility' });
+});
 
 slider.addEventListener('input', updateSliderValue);
+minusThresholdBtn.addEventListener('click', minusThreshold);
+plusThresholdBtn.addEventListener('click', plusThreshold);
+setDefaultThresholdBtn.addEventListener('click', setDefaultThreshold);
 setButton.addEventListener('click', activateExtension);
 resetButton.addEventListener('click', resetExtension);

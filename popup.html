@@ -6,15 +6,44 @@
   <link rel="stylesheet" href="./css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Indic+Siyaq+Numbers&family=Open+Sans:wght@300;400;500;600;700&family=Roboto:wght@300;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Indic+Siyaq+Numbers&family=Open+Sans:wght@300;400;500;600;700&family=Roboto:wght@300;700&display=swap"
+    rel="stylesheet">
 </head>
 
 <body>
-  <h1>MeetBouncer</h1>
+
+  <div id="modal">
+    <div class="modal-content">
+      <div class="settings-container">
+        <span>Push Notifications</span>
+        <input type="checkbox" id="notificationCheckbox" checked="checked">
+        <label for="notificationCheckbox" class="checkbox-label"></label>
+      </div>
+      <div class="settings-container">
+        <span>Default participant threshold:</span>
+      </div>
+      <div class="settings-container">
+        <button id="minusThresholdButton" class="button-dark">-</button>
+        <input type="number" id="thresholdDefaultInput" min="1" max="100" value="5"/>
+        <button id="plusThresholdButton" class="button-dark">+</button>
+        <button id="setThresholdButton">Set</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="title-block">
+    <h1>MeetBouncer</h1>
+    <button id="settingsButton" class="button-dark">
+      <svg class="icon-style" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 6h16M4 12h16m-7 6h7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
+      </svg>
+    </button>
+  </div>
   <p id="info">Automatically leave a Google meeting when a certain threshold of participants is reached!</p>
   <div class="active-calls">
     <h2>Active Calls</h2>
-    <ul id="active_tabs_list">
+    <ul id="activeTabsList">
     </ul>
   </div>
   <div class="participants-control">
@@ -22,17 +51,18 @@
     <input type="range" min="1" max="100" value="5" class="slider" id="participants-slider">
     <div class="fill"></div>
     <div class="slider-labels">
-      <span class="slider-label slider-label-left">1</span>
-      <span class="slider-value">Participants: 5</span>
-      <span class="slider-label slider-label-right">100</span>
+      <span>1</span>
+      <span id="sliderValue">Participants: 5</span>
+      <span>100</span>
     </div>
   </div>
   <div class="button-container">
     <button id="setButton">Set</button>
-    <button id="resetButton">Reset</button>
+    <button id="resetButton" class="button-dark">Reset</button>
   </div>
-
+  
   <script src="./js/popup.js"></script>
 </body>
+
 
 </html>

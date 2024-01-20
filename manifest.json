@@ -1,6 +1,6 @@
 {
     "name": "MeetBouncer: Google Meet Auto Leaver",
-    "description": "Automatically leave a Google meet when a certain threshold (number of participants leave within 8 seconds) is met!",
+    "description": "Automatically leave a Google meet when a certain threshold (number of participants leave within 5 seconds) is met!",
     "version": "1.03",
     "manifest_version": 3,
     "background": {
