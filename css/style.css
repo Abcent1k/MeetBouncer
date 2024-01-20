@@ -6,6 +6,7 @@ body {
   color: white;
   background-color: #1e2a37;
   font-family: 'Open Sans', sans-serif;
+  visibility: hidden;
 }
 
 h1 {

@@ -7,29 +7,28 @@ const plusThresholdBtn = document.getElementById("plusThresholdButton");
 const setDefaultThresholdBtn = document.getElementById("setThresholdButton");
 let currentTab;
 
-window.onload = () => {
-    chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
-        currentTab = tabs[0];
-    });
-    chrome.storage.session.get(['meet_bouncer']).then((res) => {
-        if (typeof res !== 'undefined')
-            redrawActiveCalls(res.meet_bouncer);
-    });
-    chrome.storage.local.get([
-        'mb_default_threshold',
-        'mb_push_notifications']
-    ).then((res) => {
-        if (typeof res?.mb_default_threshold !== 'undefined') {
-            slider.value = res.mb_default_threshold;
-            thresholdDefaultInput.value = res.mb_default_threshold;
-        }
+window.onload = async () => {
+    const [tabs, storageSession, storageLocal] = await Promise.all([
+        chrome.tabs.query({ active: true, currentWindow: true }),
+        chrome.storage.session.get(['meet_bouncer']),
+        chrome.storage.local.get(['mb_default_threshold', 'mb_push_notifications'])
+    ]);
+
+    currentTab = tabs[0];
+
+    if (typeof storageSession !== undefined)
+        await redrawActiveCalls(storageSession.meet_bouncer);
+
+    if (storageLocal?.mb_default_threshold !== undefined) {
+        slider.value = storageLocal.mb_default_threshold;
+        thresholdDefaultInput.value = storageLocal.mb_default_threshold;
         updateSliderValue();
-        if (typeof res?.mb_push_notifications !== 'undefined' &&
-            res.mb_push_notifications === false)
-            notificationCheckbox.checked = false;
-        else
-            notificationCheckbox.checked = true;
-    });
+    }
+
+    document.body.style.visibility = 'visible';
+
+    if (storageLocal?.mb_push_notifications !== undefined)
+        notificationCheckbox.checked = storageLocal.mb_push_notifications;
 }
 
 function activateExtension() {
@@ -68,8 +67,6 @@ async function redrawActiveCalls(mbArray) {
         addNoActiveCalls();
     } else {
         const fragment = document.createDocumentFragment();
-
-        mbArray.sort((a, b) => (parseInt(a.target_id) - parseInt(b.target_id)));
 
         for (const item of mbArray) {
             const listItem = await createListItem(item);
