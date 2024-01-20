@@ -7,12 +7,18 @@
       "service_worker": "./js/background.js"
     },
     "icons": {
-      "48": "./img/mb-disabled-48.png",
-      "128": "./img/mb-128.png"
+      "16": "./img/mb-disabled-16.png",
+      "48": "./img/mb-active-48.png",
+      "128": "./img/mb-active-128.png"
     },
     "permissions": ["storage", "activeTab", "scripting", "tabs", "notifications"],
     "host_permissions": ["https://meet.google.com/*", "http://meet.google.com/*"],
     "action": {
-      "default_popup": "popup.html"
+      "default_popup": "popup.html",
+      "default_icon": {
+        "16": "./img/mb-disabled-16.png",
+        "48": "./img/mb-disabled-48.png",
+        "128":"./img/mb-disabled-128.png"
+      }
     }
   }
