@@ -53,7 +53,7 @@ ul {
   margin-top: 8px;
   box-sizing: border-box;
   width: 100%;
-  font-family: 'Noto Sans Indic Siyaq Numbers', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
   font-size: 14px;
   list-style: none;
   border: 1px solid #595a61;
@@ -103,7 +103,7 @@ ul li:not(:last-child) {
 
 .slider-labels {
   color: #d1d5db;
-  font-family: 'Noto Sans Indic Siyaq Numbers', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
   margin-top: 0px;
   display: flex;
   justify-content: space-between;
@@ -129,6 +129,8 @@ ul li:not(:last-child) {
 }
 
 button {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
   appearance: none;
   background-color: #22c55d;
   border: 0;
@@ -138,7 +140,6 @@ button {
   cursor: pointer;
   display: inline-block;
   font-size: 14px;
-  font-weight: 500;
   line-height: 22px;
   padding: 6px 10px;
   position: relative;
