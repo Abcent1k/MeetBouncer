@@ -1,6 +1,6 @@
 body {
   height: 100%;
-  width: 300px;
+  width: 310px;
   padding: 15px;
   margin: 0px;
   color: white;
@@ -32,10 +32,10 @@ h1 {
   line-height: 0px;
 }
 
-#info {
+#infoContainer {
   color: #d1d5db;
-  font-size: 15px;
-  margin-top: 10px;
+  font-size: 14px;
+  margin-top: 0px;
 }
 
 h2 {
@@ -43,6 +43,10 @@ h2 {
   font-size: 18px;
   padding-bottom: 0px;
   margin-bottom: 0px;
+}
+
+#InfoButton {
+  width: 100%;
 }
 
 #activeTabsList li {
@@ -126,7 +130,7 @@ ul li:not(:last-child) {
 }
 
 .modal-content .settings-container:not(:first-child) {
-  padding-top: 10px;
+  padding-top: 12px;
 }
 
 button {
@@ -190,7 +194,7 @@ button:active {
   padding: 15px;
   border: 0px;
   border-radius: 6px;
-  width: 208px;
+  width: 214px;
   height: auto;
   color: white;
   background-color: #1e2a37;
@@ -210,10 +214,10 @@ button:active {
 }
 
 .checkbox-label {
+  float: right;
   display: inline-block;
   position: relative;
   top: 3px;
-  left: 4px;
   width: 36px;
   height: 17px;
   border-radius: 9px;

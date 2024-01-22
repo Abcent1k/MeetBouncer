@@ -230,7 +230,7 @@ function checkTabsVisibility() {
 function notification(message, contextMessage) {
     chrome.notifications.create(notificationId, {
         type: 'basic',
-        iconUrl: '../img/mb-128.png',
+        iconUrl: '../img/mb-active-128.png',
         title: 'MeetBouncer',
         message: message,
         contextMessage: contextMessage

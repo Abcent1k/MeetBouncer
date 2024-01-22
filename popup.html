@@ -21,7 +21,7 @@
         <label for="notificationCheckbox" class="checkbox-label"></label>
       </div>
       <div class="settings-container">
-        <span>Default participant threshold:</span>
+        <span>Default participants threshold:</span>
       </div>
       <div class="settings-container">
         <button id="minusThresholdButton" class="button-dark">-</button>
@@ -40,7 +40,10 @@
       </svg>
     </button>
   </div>
-  <p id="info">Automatically leave a Google meeting when a certain threshold of participants is reached!</p>
+  <div id="infoContainer">
+    <p>Automatically leaves Google Meet when participant count reaches or falls below your specified threshold.</p>
+  </div>
+  <button id="InfoButton">More info</button>
   <div class="active-calls">
     <h2>Active Calls</h2>
     <ul id="activeTabsList">

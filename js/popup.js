@@ -159,6 +159,40 @@ function setDefaultThreshold() {
     }
 }
 
+const moreInfoText = [
+    "The extension's icon changes from green to orange when the Meet tab becomes " +
+    "inactive, because the extension cannot work on inactive tabs.",
+    "Paired with the volume control extension, this extension works even on inactive Meet tabs, " +
+    "allowing you to browse the web freely without having to keep them open. " +
+    "Just activate that extensions while on the Meet tab."
+];
+
+InfoButton.addEventListener('click', () => {
+    if (InfoButton.innerHTML == "More info") {
+        let fragment = document.createDocumentFragment();
+
+        for (const itemText of moreInfoText) {
+            let itemInfo = document.createElement('p');
+            itemInfo.innerHTML = itemText;
+            itemInfo.setAttribute('class', "more-info");
+            fragment.appendChild(itemInfo);
+        }
+
+        infoContainer.appendChild(fragment);
+
+        InfoButton.innerHTML = "Less";
+    }
+    else {
+        let elements = document.querySelectorAll('.more-info');
+        console.log(elements);
+
+        for (const element of elements)
+            element.remove();
+
+        InfoButton.innerHTML = "More info";
+    }
+});
+
 settingsButton.addEventListener('click', () => { modal.style.display = "block"; });
 
 window.addEventListener('click', (event) => {
