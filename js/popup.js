@@ -189,7 +189,7 @@ InfoButton.addEventListener('click', () => {
 
         infoContainer.appendChild(fragment);
 
-        InfoButton.innerHTML = "Less";
+        InfoButton.innerHTML = "Hide";
     }
     else {
         let elements = document.querySelectorAll('.more-info');
