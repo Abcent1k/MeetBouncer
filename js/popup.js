@@ -31,6 +31,7 @@ window.onload = async () => {
         notificationCheckbox.checked = storageLocal.mb_push_notifications;
 }
 
+
 function activateExtension() {
     let threshold = document.getElementById('participants-slider').value;
     if (parseInt(threshold) > 0) {
@@ -38,28 +39,36 @@ function activateExtension() {
             { action: 'set_auto_leave', threshold: threshold, tab: currentTab },
             (response) => {
                 if (!response)
-                    console.log(chrome.runtime.lastError.message)
-
-                else if (response === "wrong tab")
-                    alert("Please make sure you are on the google meet tab!");
+                    console.log(chrome.runtime.lastError.message);
             }
         );
     }
 }
 
+setButton.addEventListener('mouseover', function() {
+    if (!meetRegex.test(currentTab.url))
+        this.classList.add('button-error');
+    else 
+        this.classList.remove('button-error');
+});
+
+
 function resetExtension() {
     chrome.runtime.sendMessage({ action: 'reset_auto_leave', tab: currentTab },
         (response) => {
             if (!response)
-                console.log(chrome.runtime.lastError.message)
-
-            else if (response === "wrong tab") {
-                alert("Please make sure you are on the google meet tab!");
-                //Maybe change the style of the button?
-            }
+                console.log(chrome.runtime.lastError.message);
         }
     );
 }
+
+resetButton.addEventListener('mouseover', function() {
+    if (!meetRegex.test(currentTab.url))
+        this.classList.add('button-dark-error');
+    else 
+        this.classList.remove('button-dark-error');
+});
+
 
 async function redrawActiveCalls(mbArray) {
     if (typeof mbArray === 'undefined' || mbArray.length === 0) {

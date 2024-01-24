@@ -175,6 +175,16 @@ button:active {
   transform: scale(0.98);
 }
 
+.button-error:hover {
+  background-color: #0f5329;
+  cursor: not-allowed;
+}
+
+.button-dark-error:hover {
+  background-color: #2f3745;
+  color: #11612f;
+  cursor: not-allowed;
+}
 
 #modal {
   display: none; /* Скрыть модальное окно по умолчанию */
