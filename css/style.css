@@ -1,3 +1,19 @@
+/* Customizing the scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Customizing the scrollbar thumb */
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+/* Changing the thumb color on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
 body {
   height: 100%;
   width: 310px;
@@ -41,6 +57,7 @@ h1 {
 h2 {
   font-weight: 600;
   font-size: 18px;
+  margin-top: 10px;
   padding-bottom: 0px;
   margin-bottom: 0px;
 }
@@ -76,7 +93,45 @@ ul li:not(:last-child) {
   color: orange;
 }
 
-.participants-control {
+.radio-tabs-wrapper {
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  background-color: #374151;
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 6px;
+  line-height: 20px;
+}
+
+.radio-tab {
+  display: none;
+}
+
+.radio-tab + label {
+  color: #22c55d;
+  background-color: #374151;
+  padding: 5px 13px;
+  margin: 3px;
+  border: 0;
+  border-radius: 6px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.radio-tab:checked + label {
+  color: #27272a;
+  background-color: #22c55d;
+  position: relative;
+}
+
+.radio-tab + label:hover:not(.radio-tab:checked + label:hover) {
+  background-color: #27272a;
+  color: white;
+}
+
+#controlContainer {
   padding-top: 0px;
 }
 

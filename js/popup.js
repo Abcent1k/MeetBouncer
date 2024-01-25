@@ -1,17 +1,26 @@
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
 const codeRegex = /\w{3}-\w{4}-\w{3}/
 
-const slider = document.getElementById('participants-slider');
-const minusThresholdBtn = document.getElementById("minusThresholdButton");
-const plusThresholdBtn = document.getElementById("plusThresholdButton");
-const setDefaultThresholdBtn = document.getElementById("setThresholdButton");
+import {
+    minusThresholdBtn,
+    plusThresholdBtn,
+    setDefaultThresholdBtn,
+    radioTabParticipants,
+    radioTabTime,
+    contentContainer,
+    thresholdParticipantsContainer,
+    slider,
+    labelValue,
+    thresholdTimeContainer,
+} from './elements.js'
+
 let currentTab;
 
 window.onload = async () => {
     const [tabs, storageSession, storageLocal] = await Promise.all([
         chrome.tabs.query({ active: true, currentWindow: true }),
         chrome.storage.session.get(['meet_bouncer']),
-        chrome.storage.local.get(['mb_default_threshold', 'mb_push_notifications'])
+        chrome.storage.local.get(['mb_push_notifications', 'mb_default_tab'])
     ]);
 
     currentTab = tabs[0];
@@ -19,10 +28,21 @@ window.onload = async () => {
     if (typeof storageSession !== undefined)
         await redrawActiveCalls(storageSession.meet_bouncer);
 
-    if (storageLocal?.mb_default_threshold !== undefined) {
-        slider.value = storageLocal.mb_default_threshold;
-        thresholdDefaultInput.value = storageLocal.mb_default_threshold;
-        updateSliderValue();
+    if (storageLocal?.mb_default_tab !== undefined) {
+        switch (storageLocal.mb_default_tab) {
+            case 'tabParticipants':
+                radioTabParticipants.checked = true;
+                await drawParticipantsContainer();
+                break;
+            case 'tabTime':
+                radioTabTime.checked = true;
+                drawTimeContainer();
+                break;
+        }
+    }
+    else {
+        radioTabParticipants.checked = true;
+        await drawParticipantsContainer();
     }
 
     document.body.style.visibility = 'visible';
@@ -45,10 +65,10 @@ function activateExtension() {
     }
 }
 
-setButton.addEventListener('mouseover', function() {
+setButton.addEventListener('mouseover', function () {
     if (!meetRegex.test(currentTab.url))
         this.classList.add('button-error');
-    else 
+    else
         this.classList.remove('button-error');
 });
 
@@ -62,12 +82,47 @@ function resetExtension() {
     );
 }
 
-resetButton.addEventListener('mouseover', function() {
+resetButton.addEventListener('mouseover', function () {
     if (!meetRegex.test(currentTab.url))
         this.classList.add('button-dark-error');
-    else 
+    else
         this.classList.remove('button-dark-error');
 });
+
+
+document.querySelectorAll('input[name="radioTab"]').forEach((elem) => {
+    elem.addEventListener('change', function () {
+
+        if (document.getElementById('tabParticipants').checked) {
+            drawParticipantsContainer();
+
+            chrome.storage.local.set({ 'mb_default_tab': 'tabParticipants'});
+        }
+        else if (document.getElementById('tabTime').checked) {
+            drawTimeContainer();
+
+            chrome.storage.local.set({ 'mb_default_tab': 'tabTime'});
+        }
+    });
+});
+
+async function drawParticipantsContainer() {
+    const response = await new Promise((resolve) => {
+        chrome.storage.local.get(['mb_default_threshold'],
+            (response) => {
+                resolve(response);
+            });
+    });
+    slider.setAttribute('value', response.mb_default_threshold);
+    labelValue.textContent = `Participants: ${response.mb_default_threshold}`;
+    contentContainer.innerHTML = '';
+    contentContainer.appendChild(thresholdParticipantsContainer);
+}
+
+function drawTimeContainer () {
+    contentContainer.innerHTML = '';
+    contentContainer.appendChild(thresholdTimeContainer);
+}
 
 
 async function redrawActiveCalls(mbArray) {

@@ -49,22 +49,22 @@
     <ul id="activeTabsList">
     </ul>
   </div>
-  <div class="participants-control">
-    <h2>Participants Control</h2>
-    <input type="range" min="1" max="100" value="5" class="slider" id="participants-slider">
-    <div class="fill"></div>
-    <div class="slider-labels">
-      <span>1</span>
-      <span id="sliderValue">Participants: 5</span>
-      <span>100</span>
-    </div>
+  <div class="radio-tabs-wrapper">
+    <input type="radio" class="radio-tab" name="radioTab" id="tabParticipants" checked />
+    <label for="tabParticipants">1</label>
+    <input type="radio" class="radio-tab" name="radioTab" id="tabTime" />
+    <label for="tabTime">2</label>
+    <input type="radio" class="radio-tab" name="radioTab" id="tabThreshold" />
+    <label for="tabThreshold">3</label>
   </div>
+  <div id="controlContainer"></div>
   <div class="button-container">
     <button id="setButton">Set</button>
     <button id="resetButton" class="button-dark">Reset</button>
   </div>
-  
-  <script src="./js/popup.js"></script>
+
+  <script type="module" src="./js/elements.js"></script>
+  <script type="module" src="./js/popup.js"></script>
 </body>
 
 
