@@ -1,6 +1,8 @@
 <p align="center"><img src="https://github.com/Abcent1k/MeetBouncer/blob/main/img/mb.svg" width="100"/></p>
 
 # Meet Bouncer: Google Meet Auto-Exit Extension
+Now is available on Chrome Web Store! [Extension Link](https://chromewebstore.google.com/detail/meetbouncer-google-meet-a/gkgibfogonflljeafffchiinbjohhnij).
+
 This extension is designed to enhance your Google Meet experience by automatically exiting the meeting when the number of participants reaches or falls below a predefined threshold. The number of participants is checked every 5 seconds.
 
 ## Features
