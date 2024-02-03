@@ -1,6 +1,7 @@
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/;
 const codeRegex = /\w{3}-\w{4}-\w{3}/;
 const notificationId = "1";
+let intervalTabIdDict = {};
 
 chrome.runtime.onInstalled.addListener(() => {
     chrome.action.setBadgeBackgroundColor({ color: [255, 0, 0, 255] });
@@ -138,8 +139,32 @@ function messageListener(request, sender, sendResponse) {
     else if (request.action === 'check_tabs_visibility')
         checkTabsVisibility();
 
-    else if (request.action == "log_message")
+    else if (request.action === "log_message")
         console.log(request.message);
+
+    else if (request.action === "set_timer") {
+        let countdownTime = request.time;
+
+        console.log(request.tab_id)
+
+        intervalTabIdDict[request.tab_id] = setInterval(() => {
+
+            countdownTime -= 1;
+
+            if (countdownTime == 0)
+                clearInterval(intervalTabIdDict[request.tab_id]);
+
+            chrome.action.setBadgeText({ text: "" + countdownTime, tabId: request.tab_id });
+
+            chrome.runtime.sendMessage({
+                action: 'redraw_timer',
+                tabId: request.tab_id,
+                tabUrl: request.tab_url,
+                timeLeft: countdownTime
+            });
+
+        }, 1000);
+    }
 }
 
 function checkTabAction(tab_id) {
@@ -159,6 +184,8 @@ function checkTabAction(tab_id) {
             if (meetTabs.length === 0) {
                 console.log("No more extension tabs, set the disabled icon");
                 setIcon("disabled");
+                clearTimeout(intervalTabIdDict[tab_id]);
+                delete intervalTabIdDict[tab_id];
             }
             else {
                 checkTabsVisibility();

@@ -18,6 +18,12 @@ import {
 
 let currentTab;
 
+const typeDict = {
+    'participants': 'lim',
+    'schedule': 'time',
+    'timer': 'timer'
+}
+
 window.onload = async () => {
     const [tabs, storageSession, storageLocal] = await Promise.all([
         chrome.tabs.query({ active: true, currentWindow: true }),
@@ -222,12 +228,6 @@ async function createListItem(item) {
         );
     });
 
-    let typeDict = {
-        'participants': 'lim',
-        'schedule': 'time',
-        'timer': 'timer'
-    }
-
     let listItem = document.createElement('li');
     listItem.innerHTML = `<span class="left-part">meet.google.com/${item.target_url
         .match(codeRegex)[0]}</span><span class="right-part">${typeDict[item.type]}: ${item.threshold}</span>`;
@@ -260,6 +260,12 @@ chrome.runtime.onMessage.addListener((request) => {
                 redrawActiveCalls(res.meet_bouncer);
             }
         });
+    }
+    else if (request.action === "redraw_timer") {
+        let listItem = document.querySelectorAll(`[data-tabId="${request.tabId}"]`)
+        listItem[0].innerHTML = `<span class="left-part">meet.google.com/${request.tabUrl
+            .match(codeRegex)[0]}</span>
+            <span class="right-part">${typeDict.timer}: ${request.timeLeft}</span>`;
     }
 });
 
