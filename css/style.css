@@ -66,6 +66,10 @@ h2 {
   width: 100%;
 }
 
+#activeTabsList {
+  margin-bottom: 6px;
+}
+
 #activeTabsList li {
   display: flex;
   justify-content: space-between;
@@ -93,14 +97,22 @@ ul li:not(:last-child) {
   color: orange;
 }
 
+.control-container-header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+#controlContainerTitle {
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
 .radio-tabs-wrapper {
   padding: 0;
-  display: flex;
-  justify-content: center;
+  float: right;
   background-color: #374151;
-  width: auto;
-  margin-left: auto;
-  margin-right: auto;
   border-radius: 6px;
   line-height: 20px;
 }
@@ -174,6 +186,26 @@ ul li:not(:last-child) {
   margin-bottom: 10px;
 }
 
+.time-container {
+  gap: 15px;
+  display: flex;
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#timeSetter, #timerSetter {
+  background-color: #374151;
+  color: white;
+  border: 0;
+  line-height: 36px;
+  font-size: 15px;
+  border-radius: 6px;
+  padding-inline: 12px;
+  width: 35%;
+  flex: 1; 
+}
+
 .button-container {
   display: flex;
   gap: 10px;
@@ -230,12 +262,12 @@ button:active {
   transform: scale(0.98);
 }
 
-.button-error:hover {
+button:hover:disabled {
   background-color: #0f5329;
   cursor: not-allowed;
 }
 
-.button-dark-error:hover {
+.button-dark:hover:disabled {
   background-color: #2f3745;
   color: #11612f;
   cursor: not-allowed;

@@ -4,6 +4,11 @@ const notificationId = "1";
 
 chrome.runtime.onInstalled.addListener(() => {
     chrome.action.setBadgeBackgroundColor({ color: [255, 0, 0, 255] });
+    chrome.storage.local.set({
+        'mb_default_threshold': 5,
+        'mb_default_tab': 'tabParticipants',
+        'mb_push_notifications': true,
+    })
 })
 
 function setIcon(activeFlag) {
@@ -35,8 +40,6 @@ function setIcon(activeFlag) {
 
 function messageListener(request, sender, sendResponse) {
     if (request.action === 'set_auto_leave') {
-        console.log("background.js received a click event message from popup.js for " + request.action)
-
         let meetTab;
 
         if (meetRegex.test(request.tab.url))
@@ -55,6 +58,7 @@ function messageListener(request, sender, sendResponse) {
                 if (typeof mbArray.find(item => item.target_id === meetTab.id) !== 'undefined') {
                     for (let item of mbArray) {
                         if (item.target_id === meetTab.id) {
+                            item.type = request.type;
                             item.threshold = request.threshold;
                             break;
                         }
@@ -63,13 +67,19 @@ function messageListener(request, sender, sendResponse) {
 
                     chrome.tabs.sendMessage(meetTab.id, {
                         action: "change_threshold",
+                        type: request.type,
                         threshold: request.threshold
                     });
                     return;
                 }
             }
-            chrome.tabs.sendMessage(meetTab.id, { action: "activate_extension" }, () => {
+            chrome.tabs.sendMessage(meetTab.id, {
+                action: "activate_extension",
+                type: request.type,
+                threshold: request.threshold
+            }, () => {
                 let mbItem = {
+                    'type': request.type,
                     'threshold': request.threshold,
                     'target_url': meetTab.url,
                     'target_id': meetTab.id,

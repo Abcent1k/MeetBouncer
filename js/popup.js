@@ -6,12 +6,14 @@ import {
     plusThresholdBtn,
     setDefaultThresholdBtn,
     radioTabParticipants,
-    radioTabTime,
+    radioTabSchedule,
+    radioTabTimer,
     contentContainer,
-    thresholdParticipantsContainer,
+    ParticipantsContainer,
     slider,
     labelValue,
-    thresholdTimeContainer,
+    scheduleContainer,
+    timerContainer
 } from './elements.js'
 
 let currentTab;
@@ -20,7 +22,7 @@ window.onload = async () => {
     const [tabs, storageSession, storageLocal] = await Promise.all([
         chrome.tabs.query({ active: true, currentWindow: true }),
         chrome.storage.session.get(['meet_bouncer']),
-        chrome.storage.local.get(['mb_push_notifications', 'mb_default_tab'])
+        chrome.storage.local.get(['mb_push_notifications', 'mb_default_tab', 'mb_default_threshold'])
     ]);
 
     currentTab = tabs[0];
@@ -32,20 +34,33 @@ window.onload = async () => {
         switch (storageLocal.mb_default_tab) {
             case 'tabParticipants':
                 radioTabParticipants.checked = true;
+                controlContainerTitle.innerHTML = "Participants Control";
                 await drawParticipantsContainer();
                 break;
-            case 'tabTime':
-                radioTabTime.checked = true;
-                drawTimeContainer();
+            case 'tabSchedule':
+                radioTabSchedule.checked = true;
+                controlContainerTitle.innerHTML = "Schedule Control";
+                drawScheduleContainer();
+                break;
+            case 'tabTimer':
+                radioTabTimer.checked = true;
+                controlContainerTitle.innerHTML = "Timer Control";
+                drawTimerContainer();
                 break;
         }
     }
     else {
         radioTabParticipants.checked = true;
+        controlContainerTitle.innerHTML = "Participants Control";
         await drawParticipantsContainer();
+        slider.value = storageLocal.mb_default_threshold ?? 5;
+        updateSliderValue();
     }
 
     document.body.style.visibility = 'visible';
+
+    if (storageLocal?.mb_default_threshold !== undefined)
+        thresholdDefaultInput.value = storageLocal.mb_default_threshold;
 
     if (storageLocal?.mb_push_notifications !== undefined)
         notificationCheckbox.checked = storageLocal.mb_push_notifications;
@@ -53,23 +68,66 @@ window.onload = async () => {
 
 
 function activateExtension() {
-    let threshold = document.getElementById('participants-slider').value;
-    if (parseInt(threshold) > 0) {
-        chrome.runtime.sendMessage(
-            { action: 'set_auto_leave', threshold: threshold, tab: currentTab },
-            (response) => {
-                if (!response)
-                    console.log(chrome.runtime.lastError.message);
-            }
-        );
+    if (tabParticipants.checked) {
+        let threshold = document.getElementById('participants-slider').value;
+
+        if (parseInt(threshold) > 0) {
+            chrome.runtime.sendMessage({
+                action: 'set_auto_leave',
+                type: 'participants',
+                threshold: threshold,
+                tab: currentTab
+            },
+                (response) => {
+                    if (!response)
+                        console.log(chrome.runtime.lastError.message);
+                }
+            );
+        }
+    }
+    else if (tabSchedule.checked) {
+        let threshold = timeSetter.value;
+
+        if (threshold) {
+            chrome.runtime.sendMessage({
+                action: 'set_auto_leave',
+                type: 'schedule',
+                threshold: threshold,
+                tab: currentTab,
+            },
+                (response) => {
+                    if (!response)
+                        console.log(chrome.runtime.lastError.message);
+                }
+            );
+        }
+    }
+    else if (tabTimer.checked) {
+        let threshold = timerSetter.value;
+
+        if (threshold) {
+            chrome.runtime.sendMessage({
+                action: 'set_auto_leave',
+                type: 'timer',
+                threshold: threshold,
+                tab: currentTab,
+            },
+                (response) => {
+                    if (!response)
+                        console.log(chrome.runtime.lastError.message);
+                }
+            );
+        }
     }
 }
 
 setButton.addEventListener('mouseover', function () {
-    if (!meetRegex.test(currentTab.url))
-        this.classList.add('button-error');
+    if (!meetRegex.test(currentTab.url) ||
+    (tabSchedule.checked && !timeSetter.value) ||
+    (tabTimer.checked && timerSetter.value === "00:00"))
+        this.disabled = true;
     else
-        this.classList.remove('button-error');
+        this.disabled = false;
 });
 
 
@@ -84,24 +142,32 @@ function resetExtension() {
 
 resetButton.addEventListener('mouseover', function () {
     if (!meetRegex.test(currentTab.url))
-        this.classList.add('button-dark-error');
+        this.disabled = true;
     else
-        this.classList.remove('button-dark-error');
+        this.disabled = false;
 });
 
 
 document.querySelectorAll('input[name="radioTab"]').forEach((elem) => {
     elem.addEventListener('change', function () {
 
-        if (document.getElementById('tabParticipants').checked) {
+        if (tabParticipants.checked) {
+            controlContainerTitle.innerHTML = "Participants Control";
             drawParticipantsContainer();
 
-            chrome.storage.local.set({ 'mb_default_tab': 'tabParticipants'});
+            chrome.storage.local.set({ 'mb_default_tab': 'tabParticipants' });
         }
-        else if (document.getElementById('tabTime').checked) {
-            drawTimeContainer();
+        else if (tabSchedule.checked) {
+            controlContainerTitle.innerHTML = "Schedule Control";
+            drawScheduleContainer();
 
-            chrome.storage.local.set({ 'mb_default_tab': 'tabTime'});
+            chrome.storage.local.set({ 'mb_default_tab': 'tabSchedule' });
+        }
+        else if (tabTimer.checked) {
+            controlContainerTitle.innerHTML = "Timer Control";
+            drawTimerContainer();
+
+            chrome.storage.local.set({ 'mb_default_tab': 'tabTimer' });
         }
     });
 });
@@ -116,14 +182,18 @@ async function drawParticipantsContainer() {
     slider.setAttribute('value', response.mb_default_threshold);
     labelValue.textContent = `Participants: ${response.mb_default_threshold}`;
     contentContainer.innerHTML = '';
-    contentContainer.appendChild(thresholdParticipantsContainer);
+    contentContainer.appendChild(ParticipantsContainer);
 }
 
-function drawTimeContainer () {
+function drawScheduleContainer() {
     contentContainer.innerHTML = '';
-    contentContainer.appendChild(thresholdTimeContainer);
+    contentContainer.appendChild(scheduleContainer);
 }
 
+function drawTimerContainer() {
+    contentContainer.innerHTML = '';
+    contentContainer.appendChild(timerContainer);
+}
 
 async function redrawActiveCalls(mbArray) {
     if (typeof mbArray === 'undefined' || mbArray.length === 0) {
@@ -152,9 +222,15 @@ async function createListItem(item) {
         );
     });
 
+    let typeDict = {
+        'participants': 'lim',
+        'schedule': 'time',
+        'timer': 'timer'
+    }
+
     let listItem = document.createElement('li');
     listItem.innerHTML = `<span class="left-part">meet.google.com/${item.target_url
-        .match(codeRegex)[0]}</span><span class="right-part">lim: ${item.threshold}</span>`;
+        .match(codeRegex)[0]}</span><span class="right-part">${typeDict[item.type]}: ${item.threshold}</span>`;
 
     if (!response.isVisible)
         listItem.className = "orange";

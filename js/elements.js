@@ -2,25 +2,20 @@ const minusThresholdBtn = document.getElementById("minusThresholdButton");
 const plusThresholdBtn = document.getElementById("plusThresholdButton");
 const setDefaultThresholdBtn = document.getElementById("setThresholdButton");
 const radioTabParticipants = document.getElementById("tabParticipants");
-const radioTabTime = document.getElementById("tabTime");
+const radioTabSchedule = document.getElementById("tabSchedule");
+const radioTabTimer = document.getElementById("tabTimer");
 const contentContainer = document.getElementById('controlContainer');
 
-// Создание объекта thresholdParticipantsContainer
-const thresholdParticipantsContainer = document.createElement('div');
-thresholdParticipantsContainer.classList.add('participants-control');
-
-const header = document.createElement('h2');
-header.textContent = 'Participants Control';
-thresholdParticipantsContainer.appendChild(header);
+const ParticipantsContainer = document.createElement('div');
+ParticipantsContainer.classList.add('participants-control');
 
 const slider = document.createElement('input');
 slider.setAttribute('type', 'range');
 slider.setAttribute('min', '1');
 slider.setAttribute('max', '100');
-slider.setAttribute('value', '5');
 slider.classList.add('slider');
 slider.id = 'participants-slider';
-thresholdParticipantsContainer.appendChild(slider);
+ParticipantsContainer.appendChild(slider);
 
 const sliderLabels = document.createElement('div');
 sliderLabels.classList.add('slider-labels');
@@ -31,28 +26,44 @@ sliderLabels.appendChild(labelMin);
 
 const labelValue = document.createElement('span');
 labelValue.id = 'sliderValue';
-labelValue.textContent = 'Participants: 5';
 sliderLabels.appendChild(labelValue);
 
 const labelMax = document.createElement('span');
 labelMax.textContent = '100';
 sliderLabels.appendChild(labelMax);
 
-thresholdParticipantsContainer.appendChild(sliderLabels);
+ParticipantsContainer.appendChild(sliderLabels);
 
 
-const thresholdTimeContainer = document.createElement('div');
-thresholdTimeContainer.innerHTML = `<h2>Time Control</h2>`
+const scheduleContainer = document.createElement('div');
+scheduleContainer.classList.add("time-container")
+
+const timeSetter = document.createElement('input');
+timeSetter.setAttribute('type', 'time');
+timeSetter.setAttribute('id', "timeSetter");
+scheduleContainer.appendChild(timeSetter);
+
+
+const timerContainer = document.createElement('div');
+timerContainer.classList.add("time-container")
+
+const timerSetter = document.createElement('input');
+timerSetter.setAttribute('type', 'time');
+timerSetter.setAttribute('id', "timerSetter");
+timerSetter.setAttribute('value', "00:00");
+timerContainer.appendChild(timerSetter);
 
 export {
     minusThresholdBtn,
     plusThresholdBtn,
     setDefaultThresholdBtn,
     radioTabParticipants,
-    radioTabTime,
+    radioTabSchedule,
+    radioTabTimer,
     contentContainer,
-    thresholdParticipantsContainer,
+    ParticipantsContainer,
     slider,
     labelValue,
-    thresholdTimeContainer,
+    scheduleContainer,
+    timerContainer
 };
