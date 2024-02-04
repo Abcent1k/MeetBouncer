@@ -33,6 +33,8 @@ chrome.storage.local.get(['mb_temp'], (res) => {
 });
 
 function startLogic() {
+    isStopped = false;
+
     if (type === "participants") {
         executeInterval(participantsControl);
     } else if (type === "schedule") {
@@ -42,12 +44,17 @@ function startLogic() {
     }
 }
 
+function stopLogic() {
+    isStopped = true;
+    clearTimeout(timerId);
+}
+
 function executeInterval(callback) {
     if (isStopped)
         return;
 
     callback();
-    setTimeout(() => {executeInterval(callback);}, 5000);
+    setTimeout(() => { executeInterval(callback); }, 5000);
 }
 
 function endCall() {
@@ -102,7 +109,8 @@ function timerControl() {
         action: 'set_timer',
         tab_id: tab_id,
         tab_url: tab_url,
-        time: threshold_time / 1000 });
+        time: threshold_time / 1000
+    });
 
     timerId = setTimeout(() => {
         console.log("Threshold met. User will now leave the google meet");
@@ -122,6 +130,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ isVisible: isVisible });
     }
     else if (request.action === "change_threshold") {
+        if (type === "timer")
+            chrome.runtime.sendMessage({ action: "stop_timer", tab_id: tab_id });
+
+        stopLogic();
+
         type = request.type;
         threshold = request.threshold;
         chrome.runtime.sendMessage({
@@ -129,28 +142,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             threshold: threshold,
             tab_id: tab_id
         });
+
+        startLogic();
         chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Threshold changed");
     }
     else if (request.action === "reset_extension") {
-        isStopped = true;
-        clearTimeout(timerId);
+        stopLogic();
+
         chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Extension reset on this tab");
     }
     else if (request.action === "activate_extension") {
         type = request.type;
         threshold = request.threshold
-        isStopped = false;
         chrome.runtime.sendMessage({
             action: 'extension_activation',
             type: type,
             threshold: threshold,
             tab_id: tab_id
         });
+
+        startLogic();
         chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Extension activated on this tab");
-        startLogic();
+
         sendResponse(true);
     }
 });

@@ -142,17 +142,33 @@ function messageListener(request, sender, sendResponse) {
     else if (request.action === "log_message")
         console.log(request.message);
 
+    else if (request.action === "stop_timer") {
+        if (typeof intervalTabIdDict[request.tab_id] !== "undefined") {
+            clearTimeout(intervalTabIdDict[request.tab_id][0]);
+            delete intervalTabIdDict[request.tab_id];
+        }
+    }
+
+    else if (request.action === "get_countdown_time") {
+        if (typeof intervalTabIdDict[request.tab_id] !== "undefined")
+            sendResponse(intervalTabIdDict[request.tab_id][1]);
+        else
+            sendResponse(null)
+    }
+
     else if (request.action === "set_timer") {
         let countdownTime = request.time;
 
-        console.log(request.tab_id)
+        intervalTabIdDict[request.tab_id] = new Array(2);
 
-        intervalTabIdDict[request.tab_id] = setInterval(() => {
+        intervalTabIdDict[request.tab_id][0] = setInterval(() => {
 
             countdownTime -= 1;
 
             if (countdownTime == 0)
-                clearInterval(intervalTabIdDict[request.tab_id]);
+                clearInterval(intervalTabIdDict[request.tab_id][0]);
+
+            intervalTabIdDict[request.tab_id][1] = countdownTime;
 
             chrome.action.setBadgeText({ text: "" + countdownTime, tabId: request.tab_id });
 
@@ -184,8 +200,10 @@ function checkTabAction(tab_id) {
             if (meetTabs.length === 0) {
                 console.log("No more extension tabs, set the disabled icon");
                 setIcon("disabled");
-                clearTimeout(intervalTabIdDict[tab_id]);
-                delete intervalTabIdDict[tab_id];
+                if (typeof intervalTabIdDict[tab_id] !== "undefined") {
+                    clearTimeout(intervalTabIdDict[tab_id][0]);
+                    delete intervalTabIdDict[tab_id];
+                }
             }
             else {
                 checkTabsVisibility();

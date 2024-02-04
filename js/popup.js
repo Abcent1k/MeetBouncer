@@ -129,8 +129,8 @@ function activateExtension() {
 
 setButton.addEventListener('mouseover', function () {
     if (!meetRegex.test(currentTab.url) ||
-    (tabSchedule.checked && !timeSetter.value) ||
-    (tabTimer.checked && timerSetter.value === "00:00"))
+        (tabSchedule.checked && !timeSetter.value) ||
+        (tabTimer.checked && timerSetter.value === "00:00"))
         this.disabled = true;
     else
         this.disabled = false;
@@ -222,15 +222,29 @@ async function createListItem(item) {
         chrome.tabs.sendMessage(
             item.target_id,
             { action: "check_visibility" },
-            (response) => {
-                resolve(response);
-            }
-        );
+            resolve);
     });
 
     let listItem = document.createElement('li');
+    let threshold = item.threshold;
+
+    if (item.type === "timer") {
+        try {
+            const responseThreshold = await new Promise((resolve) => {
+                chrome.runtime.sendMessage({
+                    action: "get_countdown_time",
+                    tab_id: item.target_id
+                }, resolve);
+            });
+
+            threshold = responseThreshold ?? item.threshold;
+        } catch (error) {
+            console.error("Error when receiving the countdown time: ", error);
+        }
+    }
+
     listItem.innerHTML = `<span class="left-part">meet.google.com/${item.target_url
-        .match(codeRegex)[0]}</span><span class="right-part">${typeDict[item.type]}: ${item.threshold}</span>`;
+        .match(codeRegex)[0]}</span><span class="right-part">${typeDict[item.type]}: ${threshold}</span>`;
 
     if (!response.isVisible)
         listItem.className = "orange";
@@ -330,7 +344,6 @@ InfoButton.addEventListener('click', () => {
     }
     else {
         let elements = document.querySelectorAll('.more-info');
-        console.log(elements);
 
         for (const element of elements)
             element.remove();
