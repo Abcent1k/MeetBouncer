@@ -197,9 +197,10 @@ h2 {
 }
 
 #scheduleSetter, #timerSetter {
-  background-color: #374151;
+  background-color: #2b333f;
   color: white;
-  border: 0;
+  border: 1px solid;
+  border-color: #141c25;
   line-height: 36px;
   font-size: 15px;
   border-radius: 6px;

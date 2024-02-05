@@ -22,8 +22,8 @@ import {
 let currentTab;
 
 const typeDict = {
-    'participants': 'lim',
-    'schedule': 'time',
+    'participants': 'participants',
+    'schedule': 'schedule',
     'timer': 'timer'
 }
 
@@ -276,7 +276,7 @@ async function createListItem(item) {
             threshold = secondsToTimeFormat(threshold);
     }
 
-    listItem.innerHTML = `<span class="left-part">meet.google.com/${item.target_url
+    listItem.innerHTML = `<span class="left-part">meet: ${item.target_url
         .match(codeRegex)[0]}</span><span class="right-part">${typeDict[item.type]}: ${threshold}</span>`;
 
     if (!response.isVisible)
@@ -329,7 +329,7 @@ chrome.runtime.onMessage.addListener((request) => {
     }
     else if (request.action === "redraw_timer") {
         let listItem = document.querySelectorAll(`[data-tabId="${request.tabId}"]`)
-        listItem[0].innerHTML = `<span class="left-part">meet.google.com/${request.tabUrl
+        listItem[0].innerHTML = `<span class="left-part">meet: ${request.tabUrl
             .match(codeRegex)[0]}</span>
             <span class="right-part">${typeDict.timer}: ${request.timeLeft}</span>`;
     }
