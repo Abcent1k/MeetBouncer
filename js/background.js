@@ -4,7 +4,6 @@ const notificationId = "1";
 let intervalTabIdDict = {};
 
 chrome.runtime.onInstalled.addListener(() => {
-    chrome.action.setBadgeBackgroundColor({ color: [255, 0, 0, 255] });
     chrome.storage.local.set({
         'mb_default_threshold': 5,
         'mb_default_tab': 'tabParticipants',
@@ -120,6 +119,18 @@ function messageListener(request, sender, sendResponse) {
         }).then(() => {
             checkTabsVisibility();
             let threshold = request.type === "timer" ? secondsToTimeFormat(request.threshold) : request.threshold;
+            switch (request.type) {
+                case 'schedule':
+                    chrome.action.setBadgeBackgroundColor({ color: [255, 192, 0, 255], tabId: request.tab_id });
+                    break;
+                case 'timer':
+                    chrome.action.setBadgeBackgroundColor({ color: [0, 192, 255, 255], tabId: request.tab_id });
+                    break;
+                case 'participants':
+                default:
+                    chrome.action.setBadgeBackgroundColor({ color: [255, 0, 0, 255], tabId: request.tab_id });
+                    break;
+            }
             chrome.action.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
         });
     }
