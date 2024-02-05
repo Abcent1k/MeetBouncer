@@ -49,7 +49,7 @@ h1 {
   stroke: currentColor;
 }
 
-#settingsButton { 
+#settingsButton {
   line-height: 0px;
 }
 
@@ -123,30 +123,40 @@ h2 {
   display: none;
 }
 
-.radio-tab + label {
+.radio-tab+label {
   color: #22c55d;
   background-color: #374151;
   padding: 5px 13px;
-  margin: 3px;
+  margin-top: 3px;
+  margin-bottom: 3px;
   border: 0;
   border-radius: 6px;
   display: inline-block;
   cursor: pointer;
 }
 
-.radio-tab:checked + label {
+#tabParticipants+label  {
+  margin-left: 3px;
+}
+#tabTime+label{
+  margin-right: 3px;
+}
+
+.radio-tab:checked+label {
   color: #27272a;
   background-color: #22c55d;
   position: relative;
 }
 
-.radio-tab + label:hover:not(.radio-tab:checked + label:hover) {
+.radio-tab+label:hover:not(.radio-tab:checked + label:hover) {
   background-color: #27272a;
   color: white;
 }
 
 #controlContainer {
+  margin: 0;
   padding-top: 0px;
+  padding: 0;
 }
 
 .slider {
@@ -170,7 +180,7 @@ h2 {
   width: 20px;
   background-color: #22c55d;
   cursor: pointer;
-  border-radius:50px;
+  border-radius: 50px;
   box-shadow: -200px 0 0 185px whitesmoke;
   border: 0;
 }
@@ -189,14 +199,20 @@ h2 {
 }
 
 .time-container {
-  gap: 15px;
   display: flex;
+  flex-direction: column;
   width: 100%;
-  margin-top: 10px;
+  margin-top: 4px;
   margin-bottom: 10px;
 }
 
-#scheduleSetter, #timerSetter {
+#rolldateHeaderContainer {
+  margin: 0;
+  margin-bottom: 2px;
+}
+
+#scheduleSetter,
+#timerSetter {
   background-color: #2b333f;
   color: white;
   border: 1px solid;
@@ -205,22 +221,44 @@ h2 {
   font-size: 15px;
   border-radius: 6px;
   padding-inline: 12px;
-  width: 35%;
-  flex: 1; 
+  width: 100%;
+  flex: 1;
+}
+
+#scheduleSetter:focus,
+#timerSetter:focus {
+  outline: none;
+}
+
+.selected-rolldate {
+  outline: 2px solid !important;
 }
 
 #timerSetter:hover {
   cursor: pointer;
 }
 
-.button-container {
+.centre-container {
   display: flex;
-  gap: 10px;
-  width: 100%; 
+  column-gap: 10px;
+  width: 100%;
 }
 
-.button-container button {
-  flex: 1; 
+.half-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.half-container h3 {
+  font-weight: 500;
+  font-size: 16px;
+  margin: 0;
+}
+
+.centre-container button {
+  flex: 1;
 }
 
 .modal-content .settings-container:not(:first-child) {
@@ -288,7 +326,7 @@ button:hover:disabled {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0,0,0,0.4);
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 .modal-content {
@@ -328,12 +366,13 @@ button:hover:disabled {
   cursor: pointer;
   background-color: #595a61;
 }
+
 /* slider styles */
 .checkbox-label::after {
   border-radius: 50%;
   content: '';
   position: absolute;
-  top: 2px; 
+  top: 2px;
   left: 2px;
   width: 13px;
   height: 13px;
@@ -349,10 +388,10 @@ button:hover:disabled {
 }
 
 /* Remove arrows */
-#thresholdDefaultInput::-webkit-inner-spin-button, 
-#thresholdDefaultInput::-webkit-outer-spin-button { 
+#thresholdDefaultInput::-webkit-inner-spin-button,
+#thresholdDefaultInput::-webkit-outer-spin-button {
   -webkit-appearance: none;
-  margin: 0; 
+  margin: 0;
 }
 
 #thresholdDefaultInput {
@@ -372,7 +411,8 @@ button:hover:disabled {
   outline: none;
 }
 
-#minusThresholdButton, #plusThresholdButton {
+#minusThresholdButton,
+#plusThresholdButton {
   width: 35px;
   font-size: 20px;
 }

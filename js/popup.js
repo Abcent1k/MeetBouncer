@@ -9,14 +9,13 @@ import {
     plusThresholdBtn,
     setDefaultThresholdBtn,
     radioTabParticipants,
-    radioTabSchedule,
-    radioTabTimer,
+    radioTabTime,
     contentContainer,
-    ParticipantsContainer,
+    participantsContainer,
     slider,
     labelValue,
-    scheduleContainer,
-    timerContainer
+    timeContainer,
+    selectedRolldate
 } from './elements.js'
 
 let currentTab;
@@ -46,15 +45,10 @@ window.onload = async () => {
                 controlContainerTitle.innerHTML = "Participants Control";
                 await drawParticipantsContainer();
                 break;
-            case 'tabSchedule':
-                radioTabSchedule.checked = true;
-                controlContainerTitle.innerHTML = "Schedule Control";
-                drawScheduleContainer();
-                break;
-            case 'tabTimer':
-                radioTabTimer.checked = true;
-                controlContainerTitle.innerHTML = "Timer Control";
-                drawTimerContainer();
+            case 'tabTime':
+                radioTabTime.checked = true;
+                controlContainerTitle.innerHTML = "Time Control";
+                drawTimeContainer();
                 break;
         }
     }
@@ -94,7 +88,7 @@ function activateExtension() {
             );
         }
     }
-    else if (tabSchedule.checked) {
+    else if (tabTime.checked && selectedRolldate === "scheduleSetter") {
         let threshold = scheduleSetter.value;
 
         if (threshold) {
@@ -111,7 +105,7 @@ function activateExtension() {
             );
         }
     }
-    else if (tabTimer.checked) {
+    else if (tabTime.checked && selectedRolldate === "timerSetter") {
         let threshold = timerSetter.value;
 
         if (threshold) {
@@ -139,8 +133,8 @@ function activateExtension() {
 
 setButton.addEventListener('mouseover', function () {
     if (!meetRegex.test(currentTab.url) ||
-        (tabSchedule.checked && !scheduleSetter.value) ||
-        (tabTimer.checked && timerSetter.value === "00:00:00"))
+        (tabTime.checked && selectedRolldate === "scheduleSetter" && !scheduleSetter.value) ||
+        (tabTime.checked && selectedRolldate === "timerSetter" && timerSetter.value === "00:00:00"))
         this.disabled = true;
     else
         this.disabled = false;
@@ -173,17 +167,11 @@ document.querySelectorAll('input[name="radioTab"]').forEach((elem) => {
 
             chrome.storage.local.set({ 'mb_default_tab': 'tabParticipants' });
         }
-        else if (tabSchedule.checked) {
-            controlContainerTitle.innerHTML = "Schedule Control";
-            drawScheduleContainer();
+        else if (tabTime.checked) {
+            controlContainerTitle.innerHTML = "Time Control";
+            drawTimeContainer();
 
-            chrome.storage.local.set({ 'mb_default_tab': 'tabSchedule' });
-        }
-        else if (tabTimer.checked) {
-            controlContainerTitle.innerHTML = "Timer Control";
-            drawTimerContainer();
-
-            chrome.storage.local.set({ 'mb_default_tab': 'tabTimer' });
+            chrome.storage.local.set({ 'mb_default_tab': 'tabTime' });
         }
     });
 });
@@ -198,12 +186,12 @@ async function drawParticipantsContainer() {
     slider.setAttribute('value', response.mb_default_threshold);
     labelValue.textContent = `Participants: ${response.mb_default_threshold}`;
     contentContainer.innerHTML = '';
-    contentContainer.appendChild(ParticipantsContainer);
+    contentContainer.appendChild(participantsContainer);
 }
 
-function drawScheduleContainer() {
+function drawTimeContainer() {
     contentContainer.innerHTML = '';
-    contentContainer.appendChild(scheduleContainer);
+    contentContainer.appendChild(timeContainer);
 
     if (typeof scheduleRolldate === "undefined") {
         scheduleRolldate = new Rolldate({
@@ -215,12 +203,6 @@ function drawScheduleContainer() {
             }
         });
     }
-}
-
-function drawTimerContainer() {
-    contentContainer.innerHTML = '';
-    contentContainer.appendChild(timerContainer);
-
     if (typeof timerRolldate === "undefined") {
         timerRolldate = new Rolldate({
             el: '#timerSetter',
