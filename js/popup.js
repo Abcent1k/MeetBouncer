@@ -1,6 +1,9 @@
 const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
 const codeRegex = /\w{3}-\w{4}-\w{3}/
 
+let scheduleRolldate;
+let timerRolldate;
+
 import {
     minusThresholdBtn,
     plusThresholdBtn,
@@ -52,16 +55,6 @@ window.onload = async () => {
                 radioTabTimer.checked = true;
                 controlContainerTitle.innerHTML = "Timer Control";
                 drawTimerContainer();
-                new Rolldate({
-                    el: '#timerSetter',
-                    format: 'hh:mm:ss',
-                    value: '00:00:00',
-                    lang: {
-                        hour: ' h',
-                        min: ' m',
-                        sec: ' s'
-                    }
-                });
                 break;
         }
     }
@@ -216,6 +209,19 @@ function drawScheduleContainer() {
 function drawTimerContainer() {
     contentContainer.innerHTML = '';
     contentContainer.appendChild(timerContainer);
+
+    if (typeof timerRolldate === "undefined") {
+        timerRolldate = new Rolldate({
+            el: '#timerSetter',
+            format: 'hh:mm:ss',
+            value: '00:00:00',
+            lang: {
+                hour: ' h',
+                min: ' m',
+                sec: ' s'
+            }
+        });
+    }
 }
 
 async function redrawActiveCalls(mbArray) {
