@@ -38,10 +38,12 @@ ParticipantsContainer.appendChild(sliderLabels);
 const scheduleContainer = document.createElement('div');
 scheduleContainer.classList.add("time-container")
 
-const timeSetter = document.createElement('input');
-timeSetter.setAttribute('type', 'time');
-timeSetter.setAttribute('id', "timeSetter");
-scheduleContainer.appendChild(timeSetter);
+const scheduleSetter = document.createElement('input');
+scheduleSetter.setAttribute('type', 'text');
+scheduleSetter.setAttribute('placeholder', 'hh:mm');
+scheduleSetter.setAttribute('id', "scheduleSetter");
+scheduleSetter.readOnly = true;
+scheduleContainer.appendChild(scheduleSetter);
 
 
 const timerContainer = document.createElement('div');

@@ -1,6 +1,6 @@
 /* Customizing the scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 0px;
 }
 
 /* Customizing the scrollbar thumb */
@@ -23,7 +23,7 @@ body {
   height: 100%;
   width: 310px;
   padding: 15px;
-  margin: 0px;
+  margin: 0;
   color: white;
   background-color: #1e2a37;
   font-family: 'Open Sans', sans-serif;
@@ -196,7 +196,7 @@ h2 {
   margin-bottom: 10px;
 }
 
-#timeSetter, #timerSetter {
+#scheduleSetter, #timerSetter {
   background-color: #374151;
   color: white;
   border: 0;

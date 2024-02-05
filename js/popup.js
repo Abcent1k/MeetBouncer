@@ -95,7 +95,7 @@ function activateExtension() {
         }
     }
     else if (tabSchedule.checked) {
-        let threshold = timeSetter.value;
+        let threshold = scheduleSetter.value;
 
         if (threshold) {
             chrome.runtime.sendMessage({
@@ -139,7 +139,7 @@ function activateExtension() {
 
 setButton.addEventListener('mouseover', function () {
     if (!meetRegex.test(currentTab.url) ||
-        (tabSchedule.checked && !timeSetter.value) ||
+        (tabSchedule.checked && !scheduleSetter.value) ||
         (tabTimer.checked && timerSetter.value === "00:00"))
         this.disabled = true;
     else
@@ -204,6 +204,17 @@ async function drawParticipantsContainer() {
 function drawScheduleContainer() {
     contentContainer.innerHTML = '';
     contentContainer.appendChild(scheduleContainer);
+
+    if (typeof scheduleRolldate === "undefined") {
+        scheduleRolldate = new Rolldate({
+            el: '#scheduleSetter',
+            format: 'hh:mm',
+            lang: {
+                hour: ' h',
+                min: ' m'
+            }
+        });
+    }
 }
 
 function drawTimerContainer() {
