@@ -14,6 +14,11 @@
   background: #555;
 }
 
+html {
+  margin: 0;
+  padding: 0;
+}
+
 body {
   height: 100%;
   width: 310px;
@@ -68,14 +73,6 @@ h2 {
 
 #activeTabsList {
   margin-bottom: 6px;
-}
-
-#activeTabsList li {
-  display: flex;
-  justify-content: space-between;
-}
-
-ul {
   margin-top: 8px;
   box-sizing: border-box;
   width: 100%;
@@ -89,7 +86,12 @@ ul {
   padding-bottom: 8px;
 }
 
-ul li:not(:last-child) {
+#activeTabsList li {
+  display: flex;
+  justify-content: space-between;
+}
+
+#activeTabsList li:not(:last-child) {
   margin-bottom: 8px;
 }
 
@@ -206,6 +208,10 @@ ul li:not(:last-child) {
   flex: 1; 
 }
 
+#timerSetter:hover {
+  cursor: pointer;
+}
+
 .button-container {
   display: flex;
   gap: 10px;
@@ -274,14 +280,14 @@ button:hover:disabled {
 }
 
 #modal {
-  display: none; /* Скрыть модальное окно по умолчанию */
-  position: fixed; /* Оставаться на месте при прокрутке */
-  z-index: 1; /* Сидеть над другим контентом */
+  display: none;
+  position: fixed;
+  z-index: 1;
   right: 0;
   top: 0;
-  width: 100%; /* Полная ширина */
-  height: 100%; /* Полная высота */
-  background-color: rgba(0,0,0,0.4); /* Черный с небольшой прозрачностью */
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
 }
 
 .modal-content {

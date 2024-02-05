@@ -52,6 +52,16 @@ window.onload = async () => {
                 radioTabTimer.checked = true;
                 controlContainerTitle.innerHTML = "Timer Control";
                 drawTimerContainer();
+                new Rolldate({
+                    el: '#timerSetter',
+                    format: 'hh:mm:ss',
+                    value: '00:00:00',
+                    lang: {
+                        hour: ' h',
+                        min: ' m',
+                        sec: ' s'
+                      }
+                })
                 break;
         }
     }

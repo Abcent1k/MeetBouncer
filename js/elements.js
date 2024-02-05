@@ -48,9 +48,10 @@ const timerContainer = document.createElement('div');
 timerContainer.classList.add("time-container")
 
 const timerSetter = document.createElement('input');
-timerSetter.setAttribute('type', 'time');
+timerSetter.setAttribute('type', 'text');
+timerSetter.setAttribute('placeholder', '');
 timerSetter.setAttribute('id', "timerSetter");
-timerSetter.setAttribute('value', "00:00");
+timerSetter.readOnly = true;
 timerContainer.appendChild(timerSetter);
 
 export {
