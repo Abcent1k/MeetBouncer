@@ -116,7 +116,7 @@ h2 {
   float: right;
   background-color: #374151;
   border-radius: 6px;
-  line-height: 20px;
+  line-height: 0px;
 }
 
 .radio-tab {
@@ -124,33 +124,27 @@ h2 {
 }
 
 .radio-tab+label {
-  color: #22c55d;
+  fill: #22c55d;
   background-color: #374151;
-  padding: 5px 13px;
-  margin-top: 3px;
-  margin-bottom: 3px;
+  padding: 4px 5px;
+  margin: 0;
+  margin-bottom: 0px;
   border: 0;
   border-radius: 6px;
   display: inline-block;
   cursor: pointer;
 }
 
-#tabParticipants+label  {
-  margin-left: 3px;
-}
-#tabTime+label{
-  margin-right: 3px;
-}
-
 .radio-tab:checked+label {
-  color: #27272a;
+  fill: #374151;
   background-color: #22c55d;
   position: relative;
+  cursor: default;
 }
 
 .radio-tab+label:hover:not(.radio-tab:checked + label:hover) {
-  background-color: #27272a;
-  color: white;
+  /* background-color: #27272a; */
+  fill: white;
 }
 
 #controlContainer {
