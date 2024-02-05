@@ -50,76 +50,78 @@ function messageListener(request, sender, sendResponse) {
             return;
         }
 
-        chrome.storage.session.get(['meet_bouncer'], (res) => {
+        chrome.storage.session.get(['meet_bouncer']).then((res) => {
+            let mbArray = res.meet_bouncer || [];
+            let item = mbArray.find(item => item.target_id === meetTab.id);
 
-            let mbArray = [];
-            if (typeof res['meet_bouncer'] !== 'undefined' && res['meet_bouncer'].length !== 0) {
-                mbArray = res['meet_bouncer'];
+            if (item) {
+                chrome.tabs.sendMessage(meetTab.id, {
+                    action: "change_threshold",
+                    type: request.type,
+                    threshold: request.threshold
+                });
+            } else {
+                chrome.tabs.sendMessage(meetTab.id, {
+                    action: "activate_extension",
+                    type: request.type,
+                    threshold: request.threshold
+                }, () => {
+                    let mbItem = {
+                        'type': request.type,
+                        'threshold': request.threshold,
+                        'target_url': meetTab.url,
+                        'target_id': meetTab.id,
+                    };
 
-                if (typeof mbArray.find(item => item.target_id === meetTab.id) !== 'undefined') {
-                    for (let item of mbArray) {
-                        if (item.target_id === meetTab.id) {
-                            item.type = request.type;
-                            item.threshold = request.threshold;
-                            break;
-                        }
+                    if (chrome.runtime.lastError) {
+                        chrome.storage.local.set({ 'mb_temp': mbItem });
+
+                        chrome.scripting.executeScript({
+                            target: { tabId: meetTab.id },
+                            files: ["./js/googlemeet.js"],
+                        });
                     }
-                    chrome.storage.session.set({ 'meet_bouncer': mbArray });
-
-                    chrome.tabs.sendMessage(meetTab.id, {
-                        action: "change_threshold",
-                        type: request.type,
-                        threshold: request.threshold
-                    });
-                    return;
-                }
+                });
             }
-            chrome.tabs.sendMessage(meetTab.id, {
-                action: "activate_extension",
-                type: request.type,
-                threshold: request.threshold
-            }, () => {
-                let mbItem = {
-                    'type': request.type,
-                    'threshold': request.threshold,
-                    'target_url': meetTab.url,
-                    'target_id': meetTab.id,
-                };
-                mbArray.push(mbItem);
-                chrome.storage.session.set({ 'meet_bouncer': mbArray });
-
-                if (chrome.runtime.lastError) {
-
-                    chrome.storage.local.set({ 'mb_temp': mbItem });
-
-                    chrome.scripting.executeScript({
-                        target: { tabId: meetTab.id },
-                        files: ["./js/googlemeet.js"],
-                    });
-                }
-            });
         });
     }
 
     else if (request.action === "reset_auto_leave") {
-        let meetTab;
-
-        if (meetRegex.test(request.tab.url))
-            meetTab = request.tab;
-        else {
+        if (!meetRegex.test(request.tab.url)) {
             sendResponse("wrong tab");
             return;
         }
 
-        checkTabAction(meetTab.id);
+        checkTabAction(request.tab.id);
 
-        chrome.tabs.sendMessage(meetTab.id, { action: "reset_extension" })
+        chrome.tabs.sendMessage(request.tab.id, { action: "reset_extension" })
     }
 
     else if (request.action === "extension_activation") {
-        checkTabsVisibility();
-        let threshold = request.type === "timer" ? secondsToTimeFormat(request.threshold) : request.threshold;
-        chrome.action.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
+        chrome.storage.session.get(['meet_bouncer']).then((res) => {
+
+            let mbArray = res.meet_bouncer || [];
+            let item = mbArray.find(item => item.target_id === request.tab_id);
+
+            if (item) {
+                item.type = request.type;
+                item.threshold = request.threshold;
+            } else {
+                mbArray.push({
+                    'type': request.type,
+                    'threshold': request.threshold,
+                    'target_id': request.tab_id,
+                    'target_url': request.tab_url,
+                });
+            }
+
+            chrome.storage.session.set({ 'meet_bouncer': mbArray });
+
+        }).then(() => {
+            checkTabsVisibility();
+            let threshold = request.type === "timer" ? secondsToTimeFormat(request.threshold) : request.threshold;
+            chrome.action.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
+        });
     }
 
     else if (request.action === "set_badge")

@@ -140,7 +140,7 @@ function activateExtension() {
 setButton.addEventListener('mouseover', function () {
     if (!meetRegex.test(currentTab.url) ||
         (tabSchedule.checked && !scheduleSetter.value) ||
-        (tabTimer.checked && timerSetter.value === "00:00"))
+        (tabTimer.checked && timerSetter.value === "00:00:00"))
         this.disabled = true;
     else
         this.disabled = false;

@@ -16,22 +16,24 @@ chrome.storage.local.get(['mb_temp'], (res) => {
 
     chrome.storage.local.remove('mb_temp');
 
+    startLogic();
+});
+
+function startLogic() {
     if (document.getElementsByClassName('uGOf1d').length <= 0) {
         alert("Please make sure you have already joined the room!");
+        return;
     }
     else {
         chrome.runtime.sendMessage({
             action: 'extension_activation',
             type: type,
             threshold: threshold,
-            tab_id: tab_id
+            tab_id: tab_id,
+            tab_url: tab_url,
         });
-
-        startLogic();
     }
-});
 
-function startLogic() {
     if (type === "participants") {
         executeInterval(participantsControl);
     } else if (type === "schedule") {
@@ -134,6 +136,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log("Threshold changed");
     }
     else if (request.action === "reset_extension") {
+        if (document.getElementsByClassName('uGOf1d').length <= 0) {
+            alert("Please make sure you have already joined the room!");
+            return;
+        }
         stopLogic();
 
         chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
@@ -143,12 +149,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse(true);
         type = request.type;
         threshold = request.threshold;
-        chrome.runtime.sendMessage({
-            action: 'extension_activation',
-            type: type,
-            threshold: threshold,
-            tab_id: tab_id
-        });
 
         startLogic();
         chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
