@@ -171,7 +171,7 @@ function messageListener(request, sender, sendResponse) {
 
             let countdownTimeFormat = secondsToTimeFormat(countdownTime);
 
-            intervalTabIdDict[request.tab_id][1] = countdownTimeFormat;
+            intervalTabIdDict[request.tab_id][1] = countdownTime;
 
             chrome.action.setBadgeText({ text: "" + countdownTimeFormat, tabId: request.tab_id });
 

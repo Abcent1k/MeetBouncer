@@ -243,7 +243,21 @@ async function createListItem(item) {
     });
 
     let listItem = document.createElement('li');
-    let threshold = item.type === "timer" ? secondsToTimeFormat(item.threshold) : item.threshold;
+    let threshold = item.threshold;
+
+    if (item.type === "timer") {
+        const countdownTime = await new Promise((resolve) => {
+            chrome.runtime.sendMessage({
+                action: "get_countdown_time",
+                tab_id: item.target_id,
+            }, resolve);
+        });
+
+        if (countdownTime !== null)
+            threshold = secondsToTimeFormat(countdownTime);
+        else
+            threshold = secondsToTimeFormat(threshold);
+    }
 
     listItem.innerHTML = `<span class="left-part">meet.google.com/${item.target_url
         .match(codeRegex)[0]}</span><span class="right-part">${typeDict[item.type]}: ${threshold}</span>`;
