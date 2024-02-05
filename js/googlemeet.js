@@ -54,7 +54,7 @@ function executeInterval(callback) {
         return;
 
     callback();
-    setTimeout(() => { executeInterval(callback); }, 5000);
+    setTimeout(() => { executeInterval(callback); }, 2000);
 }
 
 function endCall() {
