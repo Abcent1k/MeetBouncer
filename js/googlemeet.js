@@ -99,25 +99,18 @@ function scheduleControl() {
 }
 
 function timerControl() {
-    let hoursAndMinutes = threshold.split(':');
-    let hours = parseInt(hoursAndMinutes[0]);
-    let minutes = parseInt(hoursAndMinutes[1]);
-    let seconds = parseInt(hoursAndMinutes[2]);
-
-    let threshold_time_ms = (hours * 60 * 60 + minutes * 60 + seconds) * 1000;
-
     chrome.runtime.sendMessage({
         action: 'set_timer',
         tab_id: tab_id,
         tab_url: tab_url,
-        time: threshold_time_ms / 1000
+        time: threshold
     });
 
     timerId = setTimeout(() => {
         console.log("Threshold met. User will now leave the google meet");
 
         endCall();
-    }, threshold_time_ms)
+    }, threshold * 1000)
 }
 
 

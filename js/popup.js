@@ -60,8 +60,8 @@ window.onload = async () => {
                         hour: ' h',
                         min: ' m',
                         sec: ' s'
-                      }
-                })
+                    }
+                });
                 break;
         }
     }
@@ -122,10 +122,17 @@ function activateExtension() {
         let threshold = timerSetter.value;
 
         if (threshold) {
+            let hoursMinutesAndSeconds = threshold.split(':');
+            let hours = parseInt(hoursMinutesAndSeconds[0]);
+            let minutes = parseInt(hoursMinutesAndSeconds[1]);
+            let seconds = parseInt(hoursMinutesAndSeconds[2]);
+
+            let thresholdTimeSeconds = (hours * 60 * 60 + minutes * 60 + seconds);
+
             chrome.runtime.sendMessage({
                 action: 'set_auto_leave',
                 type: 'timer',
-                threshold: threshold,
+                threshold: thresholdTimeSeconds,
                 tab: currentTab,
             },
                 (response) => {
@@ -236,22 +243,7 @@ async function createListItem(item) {
     });
 
     let listItem = document.createElement('li');
-    let threshold = item.threshold;
-
-    if (item.type === "timer") {
-        try {
-            const responseThreshold = await new Promise((resolve) => {
-                chrome.runtime.sendMessage({
-                    action: "get_countdown_time",
-                    tab_id: item.target_id
-                }, resolve);
-            });
-
-            threshold = responseThreshold ?? item.threshold;
-        } catch (error) {
-            console.error("Error when receiving the countdown time: ", error);
-        }
-    }
+    let threshold = item.type === "timer" ? secondsToTimeFormat(item.threshold) : item.threshold;
 
     listItem.innerHTML = `<span class="left-part">meet.google.com/${item.target_url
         .match(codeRegex)[0]}</span><span class="right-part">${typeDict[item.type]}: ${threshold}</span>`;
@@ -274,6 +266,25 @@ function addNoActiveCalls() {
     let listItem = document.createElement('li');
     listItem.innerHTML = `No active calls`;
     activeTabsList.appendChild(listItem);
+}
+
+function secondsToTimeFormat(seconds) {
+    const pad = (num) => (num < 10 ? '0' : '') + num;
+
+    if (seconds >= 3600) {
+        // Format "hh:mm"
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return pad(hours) + ':' + pad(minutes);
+    } else if (seconds < 60) {
+        // Format "s"
+        return seconds;
+    } else if (seconds < 3600) {
+        // Format "mm:ss"
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return pad(minutes) + ':' + pad(remainingSeconds);
+    }
 }
 
 

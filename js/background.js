@@ -118,7 +118,8 @@ function messageListener(request, sender, sendResponse) {
 
     else if (request.action === "extension_activation") {
         checkTabsVisibility();
-        chrome.action.setBadgeText({ text: "" + request.threshold, tabId: request.tab_id });
+        let threshold = request.type === "timer" ? secondsToTimeFormat(request.threshold) : request.threshold;
+        chrome.action.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
     }
 
     else if (request.action === "set_badge")
@@ -168,18 +169,39 @@ function messageListener(request, sender, sendResponse) {
             if (countdownTime == 0)
                 clearInterval(intervalTabIdDict[request.tab_id][0]);
 
-            intervalTabIdDict[request.tab_id][1] = countdownTime;
+            let countdownTimeFormat = secondsToTimeFormat(countdownTime);
 
-            chrome.action.setBadgeText({ text: "" + countdownTime, tabId: request.tab_id });
+            intervalTabIdDict[request.tab_id][1] = countdownTimeFormat;
+
+            chrome.action.setBadgeText({ text: "" + countdownTimeFormat, tabId: request.tab_id });
 
             chrome.runtime.sendMessage({
                 action: 'redraw_timer',
                 tabId: request.tab_id,
                 tabUrl: request.tab_url,
-                timeLeft: countdownTime
+                timeLeft: countdownTimeFormat
             });
 
         }, 1000);
+    }
+}
+
+function secondsToTimeFormat(seconds) {
+    const pad = (num) => (num < 10 ? '0' : '') + num;
+
+    if (seconds >= 3600) {
+        // Format "hh:mm"
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return pad(hours) + ':' + pad(minutes);
+    } else if (seconds < 60) {
+        // Format "s"
+        return seconds;
+    } else if (seconds < 3600) {
+        // Format "mm:ss"
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return pad(minutes) + ':' + pad(remainingSeconds);
     }
 }
 
