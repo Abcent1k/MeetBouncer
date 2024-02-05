@@ -33,14 +33,15 @@ function startLogic() {
             tab_url: tab_url,
         });
     }
-
-    if (type === "participants") {
-        executeInterval(participantsControl);
-    } else if (type === "schedule") {
-        executeInterval(scheduleControl);
-    } else if (type === "timer") {
-        timerControl();
-    }
+    setTimeout(() => {
+        if (type === "participants") {
+            executeInterval(participantsControl);
+        } else if (type === "schedule") {
+            executeInterval(scheduleControl);
+        } else if (type === "timer") {
+            timerControl();
+        }
+    }, 150);
 }
 
 function stopLogic() {
