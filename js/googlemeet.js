@@ -1,4 +1,3 @@
-let isStopped = false;
 let timerId;
 let type;
 let threshold;
@@ -33,8 +32,6 @@ chrome.storage.local.get(['mb_temp'], (res) => {
 });
 
 function startLogic() {
-    isStopped = false;
-
     if (type === "participants") {
         executeInterval(participantsControl);
     } else if (type === "schedule") {
@@ -45,16 +42,12 @@ function startLogic() {
 }
 
 function stopLogic() {
-    isStopped = true;
     clearTimeout(timerId);
 }
 
 function executeInterval(callback) {
-    if (isStopped)
-        return;
-
     callback();
-    setTimeout(() => { executeInterval(callback); }, 2000);
+    timerId = setTimeout(() => { executeInterval(callback); }, 2000);
 }
 
 function endCall() {
@@ -62,10 +55,9 @@ function endCall() {
         if (i.innerHTML == 'call_end')
             i.click();
     }
+    stopLogic();
     console.log("User left the call");
     chrome.runtime.sendMessage({ action: 'check_close_meet', tab_id: tab_id });
-
-    isStopped = true;
 }
 
 function participantsControl() {
@@ -148,8 +140,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log("Extension reset on this tab");
     }
     else if (request.action === "activate_extension") {
+        sendResponse(true);
         type = request.type;
-        threshold = request.threshold
+        threshold = request.threshold;
         chrome.runtime.sendMessage({
             action: 'extension_activation',
             type: type,
@@ -161,6 +154,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Extension activated on this tab");
 
-        sendResponse(true);
     }
 });
