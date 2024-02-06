@@ -117,6 +117,7 @@ h2 {
   background-color: #374151;
   border-radius: 6px;
   line-height: 0px;
+  overflow: hidden;
 }
 
 .radio-tab {
@@ -135,23 +136,15 @@ h2 {
   cursor: pointer;
 }
 
-#tabParticipants:checked+label {
-  box-shadow: 1px 0px 5px 0px rgba(0, 0, 0, 0.5);
-}
-
-#tabTime:checked+label {
-  box-shadow: -1px 0px 5px 0px rgba(0, 0, 0, 0.5);
-}
-
 .radio-tab:checked+label {
   fill: #374151;
   background-color: #22c55d;
   position: relative;
   cursor: default;
+  box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.5);
 }
 
 .radio-tab+label:hover:not(.radio-tab:checked + label:hover) {
-  /* background-color: #27272a; */
   fill: white;
 }
 
@@ -249,12 +242,12 @@ h2 {
 .half-container {
   flex: 1;
   display: flex;
-  justify-content: center;
   align-items: center;
+  margin-left: 6px;
 }
 
 .half-container h3 {
-  font-weight: 500;
+  font-weight: 400;
   font-size: 16px;
   margin: 0;
 }
