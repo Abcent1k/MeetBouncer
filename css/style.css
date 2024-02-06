@@ -135,6 +135,14 @@ h2 {
   cursor: pointer;
 }
 
+#tabParticipants:checked+label {
+  box-shadow: 1px 0px 5px 0px rgba(0, 0, 0, 0.5);
+}
+
+#tabTime:checked+label {
+  box-shadow: -1px 0px 5px 0px rgba(0, 0, 0, 0.5);
+}
+
 .radio-tab:checked+label {
   fill: #374151;
   background-color: #22c55d;
