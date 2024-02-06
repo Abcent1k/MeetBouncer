@@ -167,7 +167,7 @@ function messageListener(request, sender, sendResponse) {
         if (typeof intervalTabIdDict[request.tab_id] !== "undefined")
             sendResponse(intervalTabIdDict[request.tab_id][1]);
         else
-            sendResponse(null)
+            sendResponse(null);
     }
 
     else if (request.action === "set_timer") {
@@ -235,6 +235,7 @@ function checkTabAction(tab_id) {
             if (meetTabs.length === 0) {
                 console.log("No more extension tabs, set the disabled icon");
                 setIcon("disabled");
+                clearNotification();
                 if (typeof intervalTabIdDict[tab_id] !== "undefined") {
                     clearTimeout(intervalTabIdDict[tab_id][0]);
                     delete intervalTabIdDict[tab_id];

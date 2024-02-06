@@ -3,6 +3,7 @@ let type;
 let threshold;
 let tab_id;
 let tab_url;
+let endCallButton;
 
 chrome.storage.local.get(['mb_temp'], (res) => {
     if (typeof res['mb_temp'] === 'undefined')
@@ -24,15 +25,26 @@ function startLogic() {
         alert("Please make sure you have already joined the room!");
         return;
     }
-    else {
-        chrome.runtime.sendMessage({
-            action: 'extension_activation',
-            type: type,
-            threshold: threshold,
-            tab_id: tab_id,
-            tab_url: tab_url,
-        });
+    chrome.runtime.sendMessage({
+        action: 'extension_activation',
+        type: type,
+        threshold: threshold,
+        tab_id: tab_id,
+        tab_url: tab_url,
+    });
+
+    for (let i of document.getElementsByTagName('i')) {
+        if (i.innerHTML == 'call_end')
+            endCallButton = i;
     }
+
+    endCallButton.addEventListener('click', () => {
+        clearTimeout(timerId);
+
+        console.log("User left the call");
+        chrome.runtime.sendMessage({ action: 'check_close_meet', tab_id: tab_id });
+    });
+
     setTimeout(() => {
         if (type === "participants") {
             executeInterval(participantsControl);
@@ -44,23 +56,9 @@ function startLogic() {
     }, 150);
 }
 
-function stopLogic() {
-    clearTimeout(timerId);
-}
-
 function executeInterval(callback) {
     callback();
     timerId = setTimeout(() => { executeInterval(callback); }, 2000);
-}
-
-function endCall() {
-    for (let i of document.getElementsByTagName('i')) {
-        if (i.innerHTML == 'call_end')
-            i.click();
-    }
-    stopLogic();
-    console.log("User left the call");
-    chrome.runtime.sendMessage({ action: 'check_close_meet', tab_id: tab_id });
 }
 
 function participantsControl() {
@@ -73,7 +71,7 @@ function participantsControl() {
     if (numParticipants <= threshold) {
         console.log("Threshold met. User will now leave the google meet");
 
-        endCall();
+        endCallButton.click();
     }
 }
 
@@ -89,7 +87,7 @@ function scheduleControl() {
     if (currentTimeString === threshold) {
         console.log("Threshold met. User will now leave the google meet");
 
-        endCall();
+        endCallButton.click();
     }
 }
 
@@ -104,7 +102,7 @@ function timerControl() {
     timerId = setTimeout(() => {
         console.log("Threshold met. User will now leave the google meet");
 
-        endCall();
+        endCallButton.click();
     }, threshold * 1000)
 }
 
@@ -122,7 +120,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (type === "timer")
             chrome.runtime.sendMessage({ action: "stop_timer", tab_id: tab_id });
 
-        stopLogic();
+        clearTimeout(timerId);
 
         type = request.type;
         threshold = request.threshold;
@@ -141,7 +139,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             alert("Please make sure you have already joined the room!");
             return;
         }
-        stopLogic();
+        clearTimeout(timerId);
 
         chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Extension reset on this tab");
@@ -154,6 +152,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         startLogic();
         chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Extension activated on this tab");
-
     }
 });
