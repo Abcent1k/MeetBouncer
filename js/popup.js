@@ -310,10 +310,12 @@ chrome.runtime.onMessage.addListener((request) => {
         });
     }
     else if (request.action === "redraw_timer") {
-        let listItem = document.querySelectorAll(`[data-tabId="${request.tabId}"]`)
+        let listItem = document.querySelectorAll(`[data-tabId="${request.tabId}"]`);
+        if (listItem?.length > 0) {
         listItem[0].innerHTML = `<span class="left-part">meet: ${request.tabUrl
             .match(codeRegex)[0]}</span>
             <span class="right-part">${typeDict.timer}: ${request.timeLeft}</span>`;
+        }
     }
 });
 
