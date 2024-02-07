@@ -68,7 +68,7 @@ function participantsControl() {
     let numParticipants = parseInt(numParticipantsElement.innerHTML);
     console.log(`Threshold: ${threshold}\nCurrent participants: ${numParticipants}`);
 
-    if (numParticipants <= threshold) {
+    if (numParticipants < threshold) {
         console.log("Threshold met. User will now leave the google meet");
 
         endCallButton.click();
