@@ -21,6 +21,7 @@ chrome.storage.local.get(['mb_temp'], (res) => {
 });
 
 function startLogic() {
+    // Icon with the number of google meet participants
     if (document.getElementsByClassName('uGOf1d').length <= 0) {
         alert("Please make sure you have already joined the room!");
         return;
@@ -108,7 +109,8 @@ function timerControl() {
 
 
 document.addEventListener("visibilitychange", () => {
-    chrome.runtime.sendMessage({ action: 'check_tabs_visibility' });
+    if (type === "participants")
+        chrome.runtime.sendMessage({ action: 'check_tabs_visibility' });
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

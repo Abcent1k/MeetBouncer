@@ -117,20 +117,18 @@ function messageListener(request, sender, sendResponse) {
             chrome.storage.session.set({ 'meet_bouncer': mbArray });
 
         }).then(() => {
-            checkTabsVisibility();
-            let threshold = request.type === "timer" ? secondsToTimeFormat(request.threshold) : request.threshold;
-            switch (request.type) {
-                case 'schedule':
-                    chrome.action.setBadgeBackgroundColor({ color: [255, 192, 0, 255], tabId: request.tab_id });
-                    break;
-                case 'timer':
-                    chrome.action.setBadgeBackgroundColor({ color: [0, 192, 255, 255], tabId: request.tab_id });
-                    break;
-                case 'participants':
-                default:
-                    chrome.action.setBadgeBackgroundColor({ color: [255, 0, 0, 255], tabId: request.tab_id });
-                    break;
-            }
+            updateTabsStatusBasedOnVisibility();
+            let threshold = request.type === "timer" ? secondsToTimeFormat(request.threshold, "hh:mm") : request.threshold;
+
+            const typeToColor = {
+                'schedule': [255, 192, 0, 255],
+                'timer': [0, 192, 255, 255],
+                'participants': [255, 0, 0, 255] // Used as default value
+            };
+
+            const color = typeToColor[request.type] || typeToColor['participants'];
+
+            chrome.action.setBadgeBackgroundColor({ color: color, tabId: request.tab_id });
             chrome.action.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
         });
     }
@@ -151,7 +149,7 @@ function messageListener(request, sender, sendResponse) {
         checkTabAction(request.tab_id);
 
     else if (request.action === 'check_tabs_visibility')
-        checkTabsVisibility();
+        updateTabsStatusBasedOnVisibility();
 
     else if (request.action === "log_message")
         console.log(request.message);
@@ -182,39 +180,39 @@ function messageListener(request, sender, sendResponse) {
             if (countdownTime == 0)
                 clearInterval(intervalTabIdDict[request.tab_id][0]);
 
-            let countdownTimeFormat = secondsToTimeFormat(countdownTime);
-
             intervalTabIdDict[request.tab_id][1] = countdownTime;
 
-            chrome.action.setBadgeText({ text: "" + countdownTimeFormat, tabId: request.tab_id });
+            chrome.action.setBadgeText({ text: "" + secondsToTimeFormat(countdownTime, "hh:mm"), tabId: request.tab_id });
 
             chrome.runtime.sendMessage({
                 action: 'redraw_timer',
                 tabId: request.tab_id,
                 tabUrl: request.tab_url,
-                timeLeft: countdownTimeFormat
+                timeLeft: secondsToTimeFormat(countdownTime, "hh:mm:ss")
             });
 
         }, 1000);
     }
 }
 
-function secondsToTimeFormat(seconds) {
+function secondsToTimeFormat(seconds, format) {
     const pad = (num) => (num < 10 ? '0' : '') + num;
 
-    if (seconds >= 3600) {
-        // Format "hh:mm"
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        return pad(hours) + ':' + pad(minutes);
-    } else if (seconds < 60) {
-        // Format "s"
-        return seconds;
-    } else if (seconds < 3600) {
-        // Format "mm:ss"
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return pad(minutes) + ':' + pad(remainingSeconds);
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = Math.floor((seconds % 3600) % 60);
+
+    switch (true) {
+        case format === "hh:mm:ss" && seconds >= 3600:
+            return `${pad(hours)}:${pad(minutes)}:${pad(remainingSeconds)}`;
+        case format === "hh:mm" && seconds >= 3600:
+            return `${pad(hours)}:${pad(minutes)}`;
+        case seconds < 3600 && seconds >= 60:
+            return `${pad(minutes)}:${pad(remainingSeconds)}`;
+        case seconds < 60:
+            return `${seconds}`;
+        default:
+            return `${pad(hours)}:${pad(minutes)}:${pad(remainingSeconds)}`;
     }
 }
 
@@ -230,7 +228,7 @@ function checkTabAction(tab_id) {
         else {
             meetTabs = meetTabs.filter(item => item.target_id !== tab_id);
             chrome.storage.session.set({ 'meet_bouncer': meetTabs });
-            chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
+            redrawActiveTabsList();
             chrome.action.setBadgeText({ text: "", tabId: tab_id });
             if (meetTabs.length === 0) {
                 console.log("No more extension tabs, set the disabled icon");
@@ -242,7 +240,7 @@ function checkTabAction(tab_id) {
                 }
             }
             else {
-                checkTabsVisibility();
+                updateTabsStatusBasedOnVisibility();
             }
         }
     });
@@ -254,67 +252,80 @@ function checkTabUpdated(tabId, changeInfo) {
     }
 }
 
-function checkTabsVisibility() {
-    chrome.storage.session.get(['meet_bouncer'], (res) => {
-        let meetTabs = res['meet_bouncer'];
+async function getMeetTabsAsync() {
+    return new Promise((resolve) => {
+        chrome.storage.session.get(['meet_bouncer'], (result) => {
+            resolve(result.meet_bouncer || []);
+        });
+    });
+}
 
-        if (typeof meetTabs === 'undefined' || meetTabs.length === 0)
-            return;
+async function updateTabsStatusBasedOnVisibility() {
+    let meetTabs = await getMeetTabsAsync();
 
-        let activeTabsCount = 0;
-        setTimeout(() => {
-            let inactiveTabs = [];
-            meetTabs.forEach((dict, index, array) => {
+    if (meetTabs.length === 0) return;
+
+    let activePartTabsCount = 0;
+    let participantsTabsCount = 0;
+    let inactiveTabs = [];
+
+    for (const dict of meetTabs) {
+        if (dict.type !== "participants") continue;
+        participantsTabsCount++;
+
+        try {
+            const isVisible = await new Promise((resolve, reject) => {
                 chrome.tabs.sendMessage(dict.target_id, { action: "check_visibility" }, (response) => {
-                    if (chrome.runtime.lastError) {
-                        console.log("Error when checking that tabs are active: ", chrome.runtime.lastError.message);
-                        return;
-                    }
-                    if (response?.isVisible)
-                        activeTabsCount++;
+                    if (chrome.runtime.lastError)
+                        reject(chrome.runtime.lastError.message);
                     else
-                        inactiveTabs.push(dict);
-
-                    if (index === array.length - 1) {
-                        setTimeout(() => {
-                            chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' }, () => {
-                                if (chrome.runtime.lastError) {
-                                    console.log("Error when checking that tabs are active: ",
-                                        chrome.runtime.lastError.message);
-                                }
-                            });
-                            if (activeTabsCount === meetTabs.length) {
-                                console.log("All tabs with the extension are active, set the active icon");
-                                setIcon("active");
-                                clearNotification();
-                            } else {
-                                console.log("Not all tabs with the extension are active, set the inactive icon");
-                                setIcon("inactive");
-                                chrome.storage.local.get(['mb_push_notifications'], (res) => {
-                                    if (res?.mb_push_notifications === false) {
-                                        clearNotification();
-                                        return;
-                                    }
-
-                                    let messageText = "";
-                                    let contextText = "";
-                                    if (inactiveTabs.length === 1) {
-                                        messageText = "Google Meet tab is inactive.";
-                                        contextText = `${inactiveTabs[0].target_url.match(codeRegex)[0]};`;
-                                    } else {
-                                        inactiveTabs.forEach(
-                                            (element) => contextText += `${element.target_url.match(codeRegex)[0]}; `)
-                                        messageText = "Google Meet tabs is inactive.";
-                                    }
-                                    notification(messageText, contextText);
-
-                                });
-                            }
-                        }, 10);
-                    }
+                        resolve(response?.isVisible);
                 });
             });
-        }, 10);
+
+            if (isVisible)
+                activePartTabsCount++;
+            else
+                inactiveTabs.push(dict);
+        }
+        catch (error) {
+            console.log("Error when checking that tabs are active: ", error);
+        }
+    }
+
+    redrawActiveTabsList();
+
+    if (activePartTabsCount === participantsTabsCount) {
+        console.log("All tabs with the extension are active, set the active icon");
+        setIcon("active");
+        clearNotification();
+    }
+    else {
+        console.log("Not all tabs with the extension are active, set the inactive icon");
+        setIcon("inactive");
+
+        const pushNotifications = await new Promise((resolve) => {
+            chrome.storage.local.get(['mb_push_notifications'], (response) => {
+                resolve(response.mb_push_notifications);
+            });
+        });
+
+        if (pushNotifications === false) {
+            // delete notifications if they already exist
+            clearNotification();
+            return;
+        }
+
+        const messageText = inactiveTabs.length === 1 ? "Google Meet tab is inactive." : "Google Meet tabs are inactive.";
+        const contextText = inactiveTabs.map(tab => `${tab.target_url.match(codeRegex)[0]}`).join('; ') + ';';
+        notification(messageText, contextText);
+    }
+}
+
+function redrawActiveTabsList() {
+    chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' }, () => {
+        if (chrome.runtime.lastError)
+            console.log("Error when redraw active tabs list: ", chrome.runtime.lastError.message);
     });
 }
 

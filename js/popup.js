@@ -234,13 +234,6 @@ async function redrawActiveCalls(mbArray) {
 }
 
 async function createListItem(item) {
-    const response = await new Promise((resolve) => {
-        chrome.tabs.sendMessage(
-            item.target_id,
-            { action: "check_visibility" },
-            resolve);
-    });
-
     let listItem = document.createElement('li');
     let threshold = item.threshold;
 
@@ -252,17 +245,30 @@ async function createListItem(item) {
             }, resolve);
         });
 
-        if (countdownTime !== null)
-            threshold = secondsToTimeFormat(countdownTime);
-        else
-            threshold = secondsToTimeFormat(threshold);
+        threshold = secondsToTimeFormat(countdownTime ?? threshold, "hh:mm:ss");
     }
 
     listItem.innerHTML = `<span class="left-part">meet: ${item.target_url
         .match(codeRegex)[0]}</span><span class="right-part">${typeDict[item.type]}: ${threshold}</span>`;
 
-    if (!response.isVisible)
-        listItem.className = "orange";
+    if (item.type === "participants") {
+        try {
+            const isVisible = await new Promise((resolve, reject) => {
+                chrome.tabs.sendMessage(item.target_id, { action: "check_visibility" }, (response) => {
+                    if (chrome.runtime.lastError)
+                        reject(chrome.runtime.lastError.message);
+                    else
+                        resolve(response?.isVisible);
+                });
+            });
+
+            if (!isVisible)
+                listItem.className = "orange";
+        }
+        catch (error) {
+            console.log("Error when checking that tabs are active: ", error);
+        }
+    }
 
     listItem.style.cursor = 'pointer';
     listItem.setAttribute('data-tabId', item.target_id);
@@ -281,22 +287,24 @@ function addNoActiveCalls() {
     activeTabsList.appendChild(listItem);
 }
 
-function secondsToTimeFormat(seconds) {
+function secondsToTimeFormat(seconds, format) {
     const pad = (num) => (num < 10 ? '0' : '') + num;
 
-    if (seconds >= 3600) {
-        // Format "hh:mm"
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        return pad(hours) + ':' + pad(minutes);
-    } else if (seconds < 60) {
-        // Format "s"
-        return seconds;
-    } else if (seconds < 3600) {
-        // Format "mm:ss"
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return pad(minutes) + ':' + pad(remainingSeconds);
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = Math.floor((seconds % 3600) % 60);
+
+    switch (true) {
+        case format === "hh:mm:ss" && seconds >= 3600:
+            return `${pad(hours)}:${pad(minutes)}:${pad(remainingSeconds)}`;
+        case format === "hh:mm" && seconds >= 3600:
+            return `${pad(hours)}:${pad(minutes)}`;
+        case seconds < 3600 && seconds >= 60:
+            return `${pad(minutes)}:${pad(remainingSeconds)}`;
+        case seconds < 60:
+            return `${seconds}`;
+        default:
+            return `${pad(hours)}:${pad(minutes)}:${pad(remainingSeconds)}`;
     }
 }
 
@@ -312,8 +320,8 @@ chrome.runtime.onMessage.addListener((request) => {
     else if (request.action === "redraw_timer") {
         let listItem = document.querySelectorAll(`[data-tabId="${request.tabId}"]`);
         if (listItem?.length > 0) {
-        listItem[0].innerHTML = `<span class="left-part">meet: ${request.tabUrl
-            .match(codeRegex)[0]}</span>
+            listItem[0].innerHTML = `<span class="left-part">meet: ${request.tabUrl
+                .match(codeRegex)[0]}</span>
             <span class="right-part">${typeDict.timer}: ${request.timeLeft}</span>`;
         }
     }
@@ -356,11 +364,8 @@ function setDefaultThreshold() {
 }
 
 const moreInfoText = [
-    "The extension's icon changes from green to orange when the Meet tab becomes " +
-    "inactive, because the extension cannot work on inactive tabs.",
-    "Paired with the volume control extension, this extension works even on inactive Meet tabs, " +
-    "allowing you to browse the web freely without having to keep them open. " +
-    "Just activate that extensions while on the Meet tab."
+    "If the Meet tab is minimized in participants threshold mode, the extension won't work, signaled by the icon turning orange.",
+    "Paired with the volume control extension, this extension works even on inactive Meet tabs, allowing you to browse the web freely without having to keep them open. Just activate that extensions while on the Meet tab."
 ];
 
 InfoButton.addEventListener('click', () => {
@@ -386,6 +391,7 @@ InfoButton.addEventListener('click', () => {
 
         InfoButton.innerHTML = "More info";
     }
+
 });
 
 settingsButton.addEventListener('click', () => { modal.style.display = "block"; });
