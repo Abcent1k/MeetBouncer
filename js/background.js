@@ -37,8 +37,7 @@ function setIcon(activeFlag) {
         });
     }
 }
-
-function messageListener(request, sender, sendResponse) {
+async function messageListener(request, sender, sendResponse) {
     if (request.action === 'set_auto_leave') {
         let meetTab;
 
@@ -148,8 +147,10 @@ function messageListener(request, sender, sendResponse) {
     else if (request.action === 'check_close_meet')
         checkTabAction(request.tab_id);
 
-    else if (request.action === 'check_tabs_visibility')
-        updateTabsStatusBasedOnVisibility();
+    else if (request.action === 'check_tabs_visibility') {
+        const inactiveTabs = await updateTabsStatusBasedOnVisibility();
+        updateNotifications(inactiveTabs);
+    }
 
     else if (request.action === "log_message")
         console.log(request.message);
@@ -303,24 +304,27 @@ async function updateTabsStatusBasedOnVisibility() {
     else {
         console.log("Not all tabs with the extension are active, set the inactive icon");
         setIcon("inactive");
-
-        const pushNotifications = await new Promise((resolve) => {
-            chrome.storage.local.get(['mb_push_notifications'], (response) => {
-                resolve(response.mb_push_notifications);
-            });
-        });
-
-        if (pushNotifications === false) {
-            // delete notifications if they already exist
-            clearNotification();
-            return;
-        }
-
-        const messageText = inactiveTabs.length === 1 ? "Google Meet tab is inactive." : "Google Meet tabs are inactive.";
-        const contextText = inactiveTabs.map(tab => `${tab.target_url.match(codeRegex)[0]}`).join('; ') + ';';
-        notification(messageText, contextText);
     }
+
+    return inactiveTabs;
 }
+
+async function updateNotifications(inactiveTabs) {
+    if (inactiveTabs?.length === 0) return;
+
+    const pushNotifications = await new Promise((resolve) => {
+        chrome.storage.local.get(['mb_push_notifications'], (response) => {
+            resolve(response.mb_push_notifications);
+        });
+    });
+
+    if (pushNotifications === false) return;
+
+    const messageText = inactiveTabs.length === 1 ? "Google Meet tab is inactive." : "Google Meet tabs are inactive.";
+    const contextText = inactiveTabs.map(tab => `${tab.target_url.match(codeRegex)[0]}`).join('; ') + ';';
+    notification(messageText, contextText);
+}
+
 
 function redrawActiveTabsList() {
     chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' }, () => {

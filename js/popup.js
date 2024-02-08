@@ -1,5 +1,6 @@
-const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/
-const codeRegex = /\w{3}-\w{4}-\w{3}/
+const meetRegex = /https?:\/\/meet.google.com\/\w{3}-\w{4}-\w{3}/;
+const codeRegex = /\w{3}-\w{4}-\w{3}/;
+const notificationId = "1";
 
 let scheduleRolldate;
 let timerRolldate;
@@ -405,7 +406,15 @@ window.addEventListener('click', (event) => {
 
 notificationCheckbox.addEventListener('click', () => {
     chrome.storage.local.set({ 'mb_push_notifications': notificationCheckbox.checked });
-    chrome.runtime.sendMessage({ action: 'check_tabs_visibility' });
+    if (notificationCheckbox.checked) {
+        chrome.runtime.sendMessage({ action: 'check_tabs_visibility' });
+    }
+    else {
+        chrome.notifications.clear(notificationId, (response) => {
+            if (response)
+                console.log('Notification deleted');
+        });
+    }
 });
 
 slider.addEventListener('input', updateSliderValue);
