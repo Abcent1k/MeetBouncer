@@ -2,11 +2,12 @@ const minusThresholdBtn = document.getElementById("minusThresholdButton");
 const plusThresholdBtn = document.getElementById("plusThresholdButton");
 const setDefaultThresholdBtn = document.getElementById("setThresholdButton");
 const radioTabParticipants = document.getElementById("tabParticipants");
-const radioTabTime = document.getElementById("tabTime");
+const radioTabSchedule = document.getElementById("tabSchedule");
+const radioTabTimer = document.getElementById("tabTimer");
 const contentContainer = document.getElementById('controlContainer');
 
 const participantsContainer = document.createElement('div');
-participantsContainer.classList.add('participants-control');
+participantsContainer.classList.add('participants-container');
 
 const slider = document.createElement('input');
 slider.setAttribute('type', 'range');
@@ -33,63 +34,26 @@ sliderLabels.appendChild(labelMax);
 
 participantsContainer.appendChild(sliderLabels);
 
-
-const timeContainer = document.createElement('div');
-timeContainer.classList.add("time-container")
-
-const rolldateHeaderContainer = document.createElement('div');
-rolldateHeaderContainer.classList.add('centre-container');
-rolldateHeaderContainer.setAttribute('id', 'rolldateHeaderContainer')
-
-
-const leftHalveContainer = document.createElement('div');
-leftHalveContainer.classList.add('half-container');
-const rightHalveContainer = document.createElement('div');
-rightHalveContainer.classList.add('half-container');
-
-
-const scheduleHeader = document.createElement('h3');
-scheduleHeader.innerHTML = "Schedule";
-leftHalveContainer.appendChild(scheduleHeader);
-
-const timerHeader = document.createElement('h3');
-timerHeader.innerHTML = "Timer";
-rightHalveContainer.appendChild(timerHeader);
-
-
-const rolldateContainer = document.createElement('div');
-rolldateContainer.classList.add('centre-container');
-
-rolldateHeaderContainer.appendChild(leftHalveContainer);
-rolldateHeaderContainer.appendChild(rightHalveContainer);
-
-let selectedRolldate;
-
-function selectRolldate (thisRolldate, anotherRolldate) {
-    selectedRolldate = thisRolldate.id;
-    thisRolldate.classList.add('selected-rolldate');
-    anotherRolldate.classList.remove("selected-rolldate")
-}
+const scheduleContainer = document.createElement('div');
+scheduleContainer.classList.add("time-container")
 
 const scheduleSetter = document.createElement('input');
 scheduleSetter.setAttribute('type', 'text');
 scheduleSetter.setAttribute('placeholder', 'hh:mm');
 scheduleSetter.setAttribute('id', "scheduleSetter");
 scheduleSetter.readOnly = true;
+scheduleContainer.appendChild(scheduleSetter);
+
+
+const timerContainer = document.createElement('div');
+timerContainer.classList.add("time-container")
 
 const timerSetter = document.createElement('input');
 timerSetter.setAttribute('type', 'text');
 timerSetter.setAttribute('placeholder', '');
 timerSetter.setAttribute('id', "timerSetter");
 timerSetter.readOnly = true;
-
-scheduleSetter.addEventListener('click', () => selectRolldate(scheduleSetter, timerSetter));
-timerSetter.addEventListener('click', () => selectRolldate(timerSetter, scheduleSetter));
-rolldateContainer.appendChild(scheduleSetter);
-rolldateContainer.appendChild(timerSetter);
-
-timeContainer.appendChild(rolldateHeaderContainer);
-timeContainer.appendChild(rolldateContainer);
+timerContainer.appendChild(timerSetter);
 
 
 export {
@@ -97,11 +61,14 @@ export {
     plusThresholdBtn,
     setDefaultThresholdBtn,
     radioTabParticipants,
-    radioTabTime,
+    radioTabSchedule,
+    radioTabTimer,
     contentContainer,
     participantsContainer,
+    scheduleContainer,
+    timerContainer,
     slider,
     labelValue,
-    timeContainer,
-    selectedRolldate
+    scheduleSetter,
+    timerSetter
 };

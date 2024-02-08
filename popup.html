@@ -41,17 +41,19 @@
     </button>
   </div>
   <div id="infoContainer">
-    <p>Automatically leaves Google Meet when participant count falls below your specified threshold, by timer or schedule.</p>
+    <p>Automatically leaves Google Meet when participant count falls below your specified threshold, by timer or
+      schedule.</p>
   </div>
   <button id="InfoButton">More info</button>
   <div class="active-calls">
-    <h2>Active Calls</h2>
+    <h2>Active Sessions</h2>
     <ul id="activeTabsList">
     </ul>
   </div>
   <div class="control-container-header">
     <h2 id="controlContainerTitle"></h2>
     <div class="radio-tabs-wrapper">
+
       <input type="radio" class="radio-tab" name="radioTab" id="tabParticipants" checked />
       <label for="tabParticipants">
         <?xml version="1.0" encoding="utf-8"?>
@@ -61,14 +63,24 @@
         </svg>
       </label>
 
-      <input type="radio" class="radio-tab" name="radioTab" id="tabTime" />
-      <label for="tabTime">
+      <input type="radio" class="radio-tab" name="radioTab" id="tabTimer" />
+      <label for="tabTimer">
+        <?xml version="1.0" encoding="utf-8"?>
+        <svg viewBox="0 0 32 32" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M 25.988 11.446 L 22.295 15.138 C 21.815 15.618 21.815 16.394 22.295 16.874 L 25.988 20.566 C 26.689 21.255 27.071 22.191 27.071 23.175 L 27.071 28.308 C 27.071 30.338 25.409 32 23.378 32 L 8.609 32 C 6.578 32 4.917 30.338 4.917 28.308 L 4.917 23.163 C 4.917 22.178 5.298 21.255 5.988 20.566 L 9.692 16.874 C 9.926 16.64 10.049 16.332 10.049 16 C 10.049 15.668 9.926 15.36 9.692 15.126 L 6 11.434 C 5.311 10.745 4.929 9.822 4.929 8.837 L 4.929 3.692 C 4.929 1.662 6.591 0 8.622 0 L 23.391 0 C 25.422 0 27.083 1.662 27.083 3.692 L 27.083 8.825 C 27.083 9.809 26.702 10.732 26 11.434 Z M 9.04 26.377 C 9.04 27.345 9.833 28.138 10.801 28.138 L 21.212 28.138 C 22.181 28.138 22.974 27.345 22.974 26.377 C 22.974 25.408 22.181 24.615 21.212 24.615 L 10.801 24.615 C 9.833 24.615 9.04 25.408 9.04 26.377 Z" />
+        </svg>
+      </label>
+
+      <input type="radio" class="radio-tab" name="radioTab" id="tabSchedule" />
+      <label for="tabSchedule">
         <?xml version="1.0" encoding="utf-8"?>
         <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M 12 0 C 5.4 0 0 5.4 0 12 C 0 18.6 5.4 24 12 24 C 18.6 24 24 18.6 24 12 C 24 5.4 18.6 0 12 0 Z M 14.4 16.44 C 13.8 16.8 13.08 16.56 12.72 15.96 L 10.92 12.6 C 10.8 12.36 10.8 12.24 10.8 12 L 10.8 6 C 10.8 5.28 11.28 4.8 12 4.8 C 12.72 4.8 13.2 5.28 13.2 6 L 13.2 11.64 L 14.88 14.76 C 15.12 15.36 15 16.08 14.4 16.44 Z" />
         </svg>
       </label>
+
     </div>
   </div>
 

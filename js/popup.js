@@ -9,13 +9,16 @@ import {
     plusThresholdBtn,
     setDefaultThresholdBtn,
     radioTabParticipants,
-    radioTabTime,
+    radioTabSchedule,
+    radioTabTimer,
     contentContainer,
     participantsContainer,
+    scheduleContainer,
+    timerContainer,
     slider,
     labelValue,
-    timeContainer,
-    selectedRolldate
+    scheduleSetter,
+    timerSetter
 } from './elements.js'
 
 let currentTab;
@@ -45,10 +48,15 @@ window.onload = async () => {
                 controlContainerTitle.innerHTML = "Participants Control";
                 await drawParticipantsContainer();
                 break;
-            case 'tabTime':
-                radioTabTime.checked = true;
-                controlContainerTitle.innerHTML = "Time Control";
-                drawTimeContainer();
+            case 'tabSchedule':
+                radioTabSchedule.checked = true;
+                controlContainerTitle.innerHTML = "Schedule Control";
+                drawScheduleContainer();
+                break;
+            case 'tabTimer':
+                radioTabTimer.checked = true;
+                controlContainerTitle.innerHTML = "Timer Control";
+                drawTimerContainer();
                 break;
         }
     }
@@ -74,38 +82,16 @@ function activateExtension() {
     if (tabParticipants.checked) {
         let threshold = document.getElementById('participants-slider').value;
 
-        if (parseInt(threshold) > 0) {
-            chrome.runtime.sendMessage({
-                action: 'set_auto_leave',
-                type: 'participants',
-                threshold: threshold,
-                tab: currentTab
-            },
-                (response) => {
-                    if (!response)
-                        console.log(chrome.runtime.lastError.message);
-                }
-            );
-        }
+        if (parseInt(threshold) > 0)
+            setAutoLeave('participants', threshold, currentTab);
     }
-    else if (tabTime.checked && selectedRolldate === "scheduleSetter") {
+    else if (tabSchedule.checked) {
         let threshold = scheduleSetter.value;
 
-        if (threshold) {
-            chrome.runtime.sendMessage({
-                action: 'set_auto_leave',
-                type: 'schedule',
-                threshold: threshold,
-                tab: currentTab,
-            },
-                (response) => {
-                    if (!response)
-                        console.log(chrome.runtime.lastError.message);
-                }
-            );
-        }
+        if (threshold)
+            setAutoLeave('schedule', threshold, currentTab);
     }
-    else if (tabTime.checked && selectedRolldate === "timerSetter") {
+    else if (tabTimer.checked) {
         let threshold = timerSetter.value;
 
         if (threshold) {
@@ -116,25 +102,29 @@ function activateExtension() {
 
             let thresholdTimeSeconds = (hours * 60 * 60 + minutes * 60 + seconds);
 
-            chrome.runtime.sendMessage({
-                action: 'set_auto_leave',
-                type: 'timer',
-                threshold: thresholdTimeSeconds,
-                tab: currentTab,
-            },
-                (response) => {
-                    if (!response)
-                        console.log(chrome.runtime.lastError.message);
-                }
-            );
+            setAutoLeave('timer', thresholdTimeSeconds, currentTab);
         }
     }
 }
 
+function setAutoLeave(type, threshold, tab) {
+    chrome.runtime.sendMessage({
+        action: 'set_auto_leave',
+        type: type,
+        threshold: threshold,
+        tab: tab,
+    },
+        (response) => {
+            if (!response)
+                console.log(chrome.runtime.lastError.message);
+        }
+    );
+}
+
 setButton.addEventListener('mouseover', function () {
     if (!meetRegex.test(currentTab.url) ||
-        (tabTime.checked && selectedRolldate === "scheduleSetter" && !scheduleSetter.value) ||
-        (tabTime.checked && selectedRolldate === "timerSetter" && timerSetter.value === "00:00:00"))
+        (tabSchedule.checked && !scheduleSetter.value) ||
+        (tabTimer.checked && timerSetter.value === "00:00:00"))
         this.disabled = true;
     else
         this.disabled = false;
@@ -167,11 +157,17 @@ document.querySelectorAll('input[name="radioTab"]').forEach((elem) => {
 
             chrome.storage.local.set({ 'mb_default_tab': 'tabParticipants' });
         }
-        else if (tabTime.checked) {
-            controlContainerTitle.innerHTML = "Time Control";
-            drawTimeContainer();
+        else if (tabSchedule.checked) {
+            controlContainerTitle.innerHTML = "Schedule Control";
+            drawScheduleContainer();
 
-            chrome.storage.local.set({ 'mb_default_tab': 'tabTime' });
+            chrome.storage.local.set({ 'mb_default_tab': 'tabSchedule' });
+        }
+        else if (tabTimer.checked) {
+            controlContainerTitle.innerHTML = "Timer Control";
+            drawTimerContainer();
+
+            chrome.storage.local.set({ 'mb_default_tab': 'tabTimer' });
         }
     });
 });
@@ -189,9 +185,9 @@ async function drawParticipantsContainer() {
     contentContainer.appendChild(participantsContainer);
 }
 
-function drawTimeContainer() {
+function drawScheduleContainer() {
     contentContainer.innerHTML = '';
-    contentContainer.appendChild(timeContainer);
+    contentContainer.appendChild(scheduleContainer);
 
     if (typeof scheduleRolldate === "undefined") {
         scheduleRolldate = new Rolldate({
@@ -203,6 +199,12 @@ function drawTimeContainer() {
             }
         });
     }
+}
+
+function drawTimerContainer() {
+    contentContainer.innerHTML = '';
+    contentContainer.appendChild(timerContainer);
+
     if (typeof timerRolldate === "undefined") {
         timerRolldate = new Rolldate({
             el: '#timerSetter',
