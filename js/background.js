@@ -37,6 +37,7 @@ function setIcon(activeFlag) {
         });
     }
 }
+
 async function messageListener(request, sender, sendResponse) {
     if (request.action === 'set_auto_leave') {
         let meetTab;

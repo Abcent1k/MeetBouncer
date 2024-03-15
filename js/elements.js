@@ -38,6 +38,7 @@ const scheduleContainer = document.createElement('div');
 scheduleContainer.classList.add("time-container")
 
 const scheduleSetter = document.createElement('input');
+scheduleSetter.classList.add("rolldate");
 scheduleSetter.setAttribute('type', 'text');
 scheduleSetter.setAttribute('placeholder', 'hh:mm');
 scheduleSetter.setAttribute('id', "scheduleSetter");
@@ -49,6 +50,7 @@ const timerContainer = document.createElement('div');
 timerContainer.classList.add("time-container")
 
 const timerSetter = document.createElement('input');
+timerSetter.classList.add("rolldate");
 timerSetter.setAttribute('type', 'text');
 timerSetter.setAttribute('placeholder', '');
 timerSetter.setAttribute('id', "timerSetter");

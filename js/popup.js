@@ -66,7 +66,8 @@ window.onload = async () => {
         controlContainerTitle.innerHTML = "Participants Control";
         await drawParticipantsContainer();
         slider.value = storageLocal.mb_default_threshold ?? 5;
-        updateSliderValue();
+        if (radioTabParticipants.checked)
+            updateSliderValue();
     }
 
     document.body.style.visibility = 'visible';
@@ -362,7 +363,8 @@ function setDefaultThreshold() {
     if (thresholdDefault >= 1 && thresholdDefault <= 100) {
         chrome.storage.local.set({ 'mb_default_threshold': thresholdDefault });
         slider.value = thresholdDefault;
-        updateSliderValue();
+        if (radioTabParticipants.checked)
+            updateSliderValue();
     }
 }
 

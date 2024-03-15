@@ -27,6 +27,8 @@ body {
   color: white;
   background-color: #1e2a37;
   font-family: 'Open Sans', sans-serif;
+  font-size: 0;
+  cursor: default;
   visibility: hidden;
 }
 
@@ -154,19 +156,25 @@ h2 {
   padding: 0;
 }
 
+.participants-container {
+  margin: 8px 0px 10px 0px;
+  font-size: 0;
+}
+
 .slider {
-  margin-top: 10px;
   height: 12px;
   width: 100%;
+  margin: 2px 0px 4px 0px;
   appearance: none;
-  background: #27272a;
+  background: #2b333f;
   border-radius: 6px;
   outline: none;
   overflow: hidden;
+  /* box-shadow: inset 0px 0px 2px rgba(0, 0, 0, 0.5); */
 }
 
 .slider:hover {
-  background: #323236;
+  background: rgb(49, 59, 73);
 }
 
 .slider::-webkit-slider-thumb {
@@ -183,14 +191,14 @@ h2 {
 .slider-labels {
   color: #d1d5db;
   font-family: 'Noto Sans', sans-serif;
-  margin-top: 0px;
+  margin: 0px;
   display: flex;
   justify-content: space-between;
   position: relative;
   width: 100%;
   text-align: center;
+  line-height: 18px;
   font-size: 14px;
-  margin-bottom: 10px;
 }
 
 .time-container {
@@ -201,8 +209,7 @@ h2 {
   margin-bottom: 10px;
 }
 
-#scheduleSetter,
-#timerSetter {
+.rolldate {
   background-color: #2b333f;
   color: white;
   border: 0;
@@ -212,15 +219,15 @@ h2 {
   padding-inline: 12px;
   width: auto;
   box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
 }
 
-#scheduleSetter:focus,
-#timerSetter:focus {
+.rolldate:focus {
   outline: none;
 }
 
-#timerSetter:hover {
-  cursor: pointer;
+.rolldate:hover {
+  background: rgb(49, 59, 73);
 }
 
 .centre-container {
