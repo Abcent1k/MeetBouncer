@@ -20,14 +20,23 @@
         <input type="checkbox" id="notificationCheckbox" checked="checked">
         <label for="notificationCheckbox" class="checkbox-label"></label>
       </div>
-      <div class="settings-container">
-        <span>Default participants threshold:</span>
+      <div class="settings-container-name">
+        <span>Default participants slider value:</span>
       </div>
       <div class="settings-container">
         <button id="minusThresholdButton" class="button-dark">-</button>
         <input type="number" id="thresholdDefaultInput" min="1" max="100" value="5" />
         <button id="plusThresholdButton" class="button-dark">+</button>
         <button id="setThresholdButton">Set</button>
+      </div>
+      <div class="settings-container-name">
+        <span>Max participants slider value:</span>
+      </div>
+      <div class="settings-container">
+        <button id="minusMaxSliderButton" class="button-dark">-</button>
+        <input type="number" id="inputMaxSlider" min="1" max="100" value="50" />
+        <button id="plusMaxSliderButton" class="button-dark">+</button>
+        <button id="setMaxSliderButton">Set</button>
       </div>
     </div>
   </div>

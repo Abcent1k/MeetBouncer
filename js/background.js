@@ -8,6 +8,7 @@ chrome.runtime.onInstalled.addListener(() => {
         'mb_default_threshold': 5,
         'mb_default_tab': 'tabParticipants',
         'mb_push_notifications': true,
+        'mb_max_threshold': 50,
     })
 })
 

@@ -253,8 +253,12 @@ h2 {
   flex: 1;
 }
 
-.modal-content .settings-container:not(:first-child) {
-  padding-top: 12px;
+.modal-content .settings-container-name:not(:first-child) {
+  margin-top: 12px;
+}
+
+.settings-container {
+  margin-top: 6px;
 }
 
 button {
@@ -328,7 +332,7 @@ button:hover:disabled {
   padding: 15px;
   border: 0px;
   border-radius: 6px;
-  width: 214px;
+  width: 226px;
   height: auto;
   color: white;
   background-color: #1e2a37;
@@ -381,12 +385,15 @@ button:hover:disabled {
 
 /* Remove arrows */
 #thresholdDefaultInput::-webkit-inner-spin-button,
-#thresholdDefaultInput::-webkit-outer-spin-button {
+#thresholdDefaultInput::-webkit-outer-spin-button,
+#inputMaxSlider::-webkit-inner-spin-button,
+#inputMaxSlider::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-#thresholdDefaultInput {
+#thresholdDefaultInput,
+#inputMaxSlider {
   position: relative;
   top: 1px;
   width: 32px;
@@ -400,25 +407,31 @@ button:hover:disabled {
   box-shadow: inset 0px 0px 3px rgba(0, 0, 0, 0.5);
 }
 
-#thresholdDefaultInput:focus {
+#thresholdDefaultInput:focus,
+#inputMaxSlider:focus {
   outline: none;
 }
 
 #minusThresholdButton,
-#plusThresholdButton {
+#plusThresholdButton,
+#minusMaxSliderButton,
+#plusMaxSliderButton {
   width: 35px;
   font-size: 20px;
 }
 
-#minusThresholdButton {
+#minusThresholdButton,
+#minusMaxSliderButton {
   margin-right: 5px;
 }
 
-#plusThresholdButton {
+#plusThresholdButton,
+#plusMaxSliderButton {
   margin-left: 5px;
 }
 
-#setThresholdButton {
+#setThresholdButton,
+#setMaxSliderButton {
   width: 50px;
   float: right;
 }

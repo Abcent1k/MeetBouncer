@@ -5,6 +5,8 @@ const notificationId = "1";
 let scheduleRolldate;
 let timerRolldate;
 
+let mb_max_threshold;
+
 import {
     minusThresholdBtn,
     plusThresholdBtn,
@@ -18,6 +20,7 @@ import {
     timerContainer,
     slider,
     labelValue,
+    labelMax,
     scheduleSetter,
     timerSetter
 } from './elements.js'
@@ -34,7 +37,7 @@ window.onload = async () => {
     const [tabs, storageSession, storageLocal] = await Promise.all([
         chrome.tabs.query({ active: true, currentWindow: true }),
         chrome.storage.session.get(['meet_bouncer']),
-        chrome.storage.local.get(['mb_push_notifications', 'mb_default_tab', 'mb_default_threshold'])
+        chrome.storage.local.get(['mb_push_notifications', 'mb_default_tab'])
     ]);
 
     currentTab = tabs[0];
@@ -42,43 +45,45 @@ window.onload = async () => {
     if (typeof storageSession !== undefined)
         await redrawActiveCalls(storageSession.meet_bouncer);
 
-    if (storageLocal?.mb_default_tab !== undefined) {
-        switch (storageLocal.mb_default_tab) {
-            case 'tabParticipants':
-                radioTabParticipants.checked = true;
-                controlContainerTitle.innerHTML = "Participants Control";
-                await drawParticipantsContainer();
-                break;
-            case 'tabSchedule':
-                radioTabSchedule.checked = true;
-                controlContainerTitle.innerHTML = "Schedule Control";
-                drawScheduleContainer();
-                break;
-            case 'tabTimer':
-                radioTabTimer.checked = true;
-                controlContainerTitle.innerHTML = "Timer Control";
-                drawTimerContainer();
-                break;
-        }
-    }
-    else {
-        radioTabParticipants.checked = true;
-        controlContainerTitle.innerHTML = "Participants Control";
-        await drawParticipantsContainer();
-        slider.value = storageLocal.mb_default_threshold ?? 5;
-        if (radioTabParticipants.checked)
-            updateSliderValue();
+    switch (storageLocal?.mb_default_tab) {
+        case 'tabSchedule':
+            radioTabSchedule.checked = true;
+            controlContainerTitle.innerHTML = "Schedule Control";
+            drawScheduleContainer();
+            break;
+        case 'tabTimer':
+            radioTabTimer.checked = true;
+            controlContainerTitle.innerHTML = "Timer Control";
+            drawTimerContainer();
+            break;
+        case 'tabParticipants':
+        default:
+            radioTabParticipants.checked = true;
+            controlContainerTitle.innerHTML = "Participants Control";
+            await drawParticipantsContainer();
+            break;
     }
 
     document.body.style.visibility = 'visible';
 
-    if (storageLocal?.mb_default_threshold !== undefined)
-        thresholdDefaultInput.value = storageLocal.mb_default_threshold;
-
     if (storageLocal?.mb_push_notifications !== undefined)
         notificationCheckbox.checked = storageLocal.mb_push_notifications;
+
+    await redrawSettingsContainer();
 }
 
+
+async function redrawSettingsContainer() {
+    const [storageLocal] = await Promise.all([
+        chrome.storage.local.get(['mb_max_threshold', 'mb_default_threshold'])
+    ]);
+
+    mb_max_threshold = storageLocal?.mb_max_threshold;
+
+    thresholdDefaultInput.setAttribute('max', mb_max_threshold ?? 50);
+    inputMaxSlider.setAttribute('max', mb_max_threshold ?? 50);
+    thresholdDefaultInput.value = storageLocal?.mb_default_threshold ?? 5;
+}
 
 function activateExtension() {
     if (tabParticipants.checked) {
@@ -176,13 +181,18 @@ document.querySelectorAll('input[name="radioTab"]').forEach((elem) => {
 
 async function drawParticipantsContainer() {
     const response = await new Promise((resolve) => {
-        chrome.storage.local.get(['mb_default_threshold'],
+        chrome.storage.local.get(['mb_default_threshold', 'mb_max_threshold'],
             (response) => {
                 resolve(response);
             });
     });
-    slider.setAttribute('value', response.mb_default_threshold);
-    labelValue.textContent = `Participants: ${response.mb_default_threshold}`;
+
+    slider.setAttribute('value', response.mb_default_threshold ?? 5);
+    slider.setAttribute('max', response.mb_max_threshold ?? 50);
+
+    labelValue.textContent = `Participants: ${slider.value}`;
+    labelMax.textContent = slider.max;
+
     contentContainer.innerHTML = '';
     contentContainer.appendChild(participantsContainer);
 }
@@ -336,36 +346,46 @@ function updateSliderValue() {
     sliderValue.textContent = `Participants: ${slider.value}`;
 }
 
-function minusThreshold() {
-    let currentThreshold = parseInt(thresholdDefaultInput.value);
+function minusBttn(InputField, maxValue) {
+    let currentValue = parseInt(InputField.value);
 
-    if (currentThreshold <= 1)
-        thresholdDefaultInput.value = 1;
-    else if (currentThreshold > 100)
-        thresholdDefaultInput.value = 100;
-    else if (currentThreshold <= 100)
-        thresholdDefaultInput.value = parseInt(currentThreshold) - 1;
+    if (currentValue <= 1)
+        InputField.value = 1;
+    else if (currentValue > maxValue)
+        InputField.value = maxValue;
+    else if (currentValue <= maxValue)
+        InputField.value = parseInt(currentValue) - 1;
 }
 
-function plusThreshold() {
-    let currentThreshold = parseInt(thresholdDefaultInput.value);
+function plusBttn(InputField, maxValue) {
+    let currentValue = parseInt(InputField.value);
 
-    if (currentThreshold < 1)
-        thresholdDefaultInput.value = 1;
-    else if (currentThreshold >= 100)
-        thresholdDefaultInput.value = 100;
-    else if (currentThreshold < 100)
-        thresholdDefaultInput.value = parseInt(currentThreshold) + 1;
+    if (currentValue < 1)
+        InputField.value = 1;
+    else if (currentValue >= maxValue)
+        InputField.value = maxValue;
+    else if (currentValue < maxValue)
+        InputField.value = parseInt(currentValue) + 1;
 }
 
-function setDefaultThreshold() {
-    let thresholdDefault = thresholdDefaultInput.value;
-    if (thresholdDefault >= 1 && thresholdDefault <= 100) {
-        chrome.storage.local.set({ 'mb_default_threshold': thresholdDefault });
-        slider.value = thresholdDefault;
-        if (radioTabParticipants.checked)
-            updateSliderValue();
+function setValue(InputField, maxValue, storageLocalParameter, callback) {
+    let valueDefault = InputField.value;
+    if (valueDefault >= 1 && valueDefault <= maxValue) {
+        chrome.storage.local.set({ [storageLocalParameter]: valueDefault });
+        callback(valueDefault);
     }
+}
+
+function updateSlider(mb_default_thr) {
+    slider.value = mb_default_thr ?? 5;
+    updateSliderValue();
+}
+
+function updateMaxSlider(mb_max_thr) {
+    slider.setAttribute('max', mb_max_thr ?? 50);
+    labelMax.textContent = mb_max_thr ?? 50;
+
+    mb_max_threshold = mb_max_thr ?? 50;
 }
 
 const moreInfoText = [
@@ -420,8 +440,21 @@ notificationCheckbox.addEventListener('click', () => {
 });
 
 slider.addEventListener('input', updateSliderValue);
-minusThresholdBtn.addEventListener('click', minusThreshold);
-plusThresholdBtn.addEventListener('click', plusThreshold);
-setDefaultThresholdBtn.addEventListener('click', setDefaultThreshold);
+minusThresholdBtn.addEventListener('click', () => minusBttn(thresholdDefaultInput, mb_max_threshold));
+plusThresholdBtn.addEventListener('click', () => plusBttn(thresholdDefaultInput, mb_max_threshold));
+setDefaultThresholdBtn.addEventListener('click', () => setValue(
+    thresholdDefaultInput,
+    mb_max_threshold,
+    'mb_default_threshold',
+    updateSlider));
+
+minusMaxSliderButton.addEventListener('click', () => minusBttn(inputMaxSlider, 100));
+plusMaxSliderButton.addEventListener('click', () => plusBttn(inputMaxSlider, 100));
+setMaxSliderButton.addEventListener('click', () => setValue(
+    inputMaxSlider,
+    100,
+    'mb_max_threshold',
+    updateMaxSlider));
+
 setButton.addEventListener('click', activateExtension);
 resetButton.addEventListener('click', resetExtension);

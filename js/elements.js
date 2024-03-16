@@ -71,6 +71,7 @@ export {
     timerContainer,
     slider,
     labelValue,
+    labelMax,
     scheduleSetter,
     timerSetter
 };
