@@ -13,57 +13,29 @@ browser.runtime.onInstalled.addListener(() => {
 })
 
 function setIcon(activeFlag) {
-    if (browser.browserAction) {
-        if (activeFlag == "active") {
-            browser.browserAction.setIcon({
-                path: {
-                    "16": "../img/mb-active-16.png",
-                    "48": "../img/mb-active-48.png"
-                }
-            });
-        }
-        else if (activeFlag == "inactive") {
-            browser.browserAction.setIcon({
-                path: {
-                    "16": "../img/mb-inactive-16.png",
-                    "48": "../img/mb-inactive-48.png"
-                }
-            });
-        }
-        else if (activeFlag == "disabled") {
-            browser.browserAction.setIcon({
-                path: {
-                    "16": "../img/mb-disabled-16.png",
-                    "48": "../img/mb-disabled-48.png"
-                }
-            });
-        }
+    if (activeFlag == "active") {
+        browser.browserAction.setIcon({
+            path: {
+                "16": "../img/mb-active-16.png",
+                "48": "../img/mb-active-48.png"
+            }
+        });
     }
-    else if (browser.action) {
-        if (activeFlag == "active") {
-            browser.action.setIcon({
-                path: {
-                    "16": "../img/mb-active-16.png",
-                    "48": "../img/mb-active-48.png"
-                }
-            });
-        }
-        else if (activeFlag == "inactive") {
-            browser.action.setIcon({
-                path: {
-                    "16": "../img/mb-inactive-16.png",
-                    "48": "../img/mb-inactive-48.png"
-                }
-            });
-        }
-        else if (activeFlag == "disabled") {
-            browser.action.setIcon({
-                path: {
-                    "16": "../img/mb-disabled-16.png",
-                    "48": "../img/mb-disabled-48.png"
-                }
-            });
-        }
+    else if (activeFlag == "inactive") {
+        browser.browserAction.setIcon({
+            path: {
+                "16": "../img/mb-inactive-16.png",
+                "48": "../img/mb-inactive-48.png"
+            }
+        });
+    }
+    else if (activeFlag == "disabled") {
+        browser.browserAction.setIcon({
+            path: {
+                "16": "../img/mb-disabled-16.png",
+                "48": "../img/mb-disabled-48.png"
+            }
+        });
     }
 }
 
@@ -157,18 +129,13 @@ async function messageListener(request, sender, sendResponse) {
 
             const color = typeToColor[request.type] || typeToColor['participants'];
 
-            if (browser.browserAction) {
-                browser.browserAction.setBadgeBackgroundColor({ color: color, tabId: request.tab_id });
-                browser.browserAction.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
-            } else if (browser.action) {
-                browser.action.setBadgeBackgroundColor({ color: color, tabId: request.tab_id });
-                browser.action.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
-            }
+            browser.browserAction.setBadgeBackgroundColor({ color: color, tabId: request.tab_id });
+            browser.browserAction.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
         });
     }
 
     else if (request.action === "set_badge")
-        browser.action.setBadgeText({ text: "" + request.threshold, tabId: request.tab_id });
+        browser.browserAction.setBadgeText({ text: "" + request.threshold, tabId: request.tab_id });
 
     else if (request.action === "activate_icon")
         setIcon("active");
@@ -218,11 +185,7 @@ async function messageListener(request, sender, sendResponse) {
 
             intervalTabIdDict[request.tab_id][1] = countdownTime;
 
-            if (browser.browserAction) {
-                browser.browserAction.setBadgeText({ text: "" + secondsToTimeFormat(countdownTime, "hh:mm"), tabId: request.tab_id });
-            } else if (browser.action) {
-                browser.action.setBadgeText({ text: "" + secondsToTimeFormat(countdownTime, "hh:mm"), tabId: request.tab_id });
-            }
+            browser.browserAction.setBadgeText({ text: "" + secondsToTimeFormat(countdownTime, "hh:mm"), tabId: request.tab_id });
 
             browser.runtime.sendMessage({
                 action: 'redraw_timer',
@@ -269,11 +232,8 @@ function checkTabAction(tab_id) {
             meetTabs = meetTabs.filter(item => item.target_id !== tab_id);
             browser.storage.session.set({ 'meet_bouncer': meetTabs });
             redrawActiveTabsList();
-            if (browser.browserAction) {
-                browser.browserAction.setBadgeText({ text: "", tabId: tab_id });
-            } else if (browser.action) {
-                browser.action.setBadgeText({ text: "", tabId: tab_id });
-            }
+            browser.browserAction.setBadgeText({ text: "", tabId: tab_id });
+
             if (meetTabs.length === 0) {
                 console.log("No more extension tabs, set the disabled icon");
                 setIcon("disabled");

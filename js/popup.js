@@ -48,18 +48,18 @@ window.onload = async () => {
     switch (storageLocal?.mb_default_tab) {
         case 'tabSchedule':
             radioTabSchedule.checked = true;
-            controlContainerTitle.innerHTML = "Schedule Control";
+            controlContainerTitle.textContent = "Schedule Control";
             drawScheduleContainer();
             break;
         case 'tabTimer':
             radioTabTimer.checked = true;
-            controlContainerTitle.innerHTML = "Timer Control";
+            controlContainerTitle.textContent = "Timer Control";
             drawTimerContainer();
             break;
         case 'tabParticipants':
         default:
             radioTabParticipants.checked = true;
-            controlContainerTitle.innerHTML = "Participants Control";
+            controlContainerTitle.textContent = "Participants Control";
             await drawParticipantsContainer();
             break;
     }
@@ -157,19 +157,19 @@ document.querySelectorAll('input[name="radioTab"]').forEach((elem) => {
     elem.addEventListener('change', function () {
 
         if (tabParticipants.checked) {
-            controlContainerTitle.innerHTML = "Participants Control";
+            controlContainerTitle.textContent = "Participants Control";
             drawParticipantsContainer();
 
             browser.storage.local.set({ 'mb_default_tab': 'tabParticipants' });
         }
         else if (tabSchedule.checked) {
-            controlContainerTitle.innerHTML = "Schedule Control";
+            controlContainerTitle.textContent = "Schedule Control";
             drawScheduleContainer();
 
             browser.storage.local.set({ 'mb_default_tab': 'tabSchedule' });
         }
         else if (tabTimer.checked) {
-            controlContainerTitle.innerHTML = "Timer Control";
+            controlContainerTitle.textContent = "Timer Control";
             drawTimerContainer();
 
             browser.storage.local.set({ 'mb_default_tab': 'tabTimer' });
@@ -191,12 +191,12 @@ async function drawParticipantsContainer() {
     labelValue.textContent = `Participants: ${slider.value}`;
     labelMax.textContent = slider.max;
 
-    contentContainer.innerHTML = '';
+    contentContainer.textContent = '';
     contentContainer.appendChild(participantsContainer);
 }
 
 function drawScheduleContainer() {
-    contentContainer.innerHTML = '';
+    contentContainer.textContent = '';
     contentContainer.appendChild(scheduleContainer);
 
     if (typeof scheduleRolldate === "undefined") {
@@ -212,7 +212,7 @@ function drawScheduleContainer() {
 }
 
 function drawTimerContainer() {
-    contentContainer.innerHTML = '';
+    contentContainer.textContent = '';
     contentContainer.appendChild(timerContainer);
 
     if (typeof timerRolldate === "undefined") {
@@ -231,7 +231,7 @@ function drawTimerContainer() {
 
 async function redrawActiveCalls(mbArray) {
     if (typeof mbArray === 'undefined' || mbArray.length === 0) {
-        activeTabsList.innerHTML = "";
+        activeTabsList.textContent = "";
         addNoActiveCalls();
     } else {
         const fragment = document.createDocumentFragment();
@@ -240,7 +240,7 @@ async function redrawActiveCalls(mbArray) {
             const listItem = await createListItem(item);
             fragment.appendChild(listItem);
         }
-        activeTabsList.innerHTML = "";
+        activeTabsList.textContent = "";
         activeTabsList.appendChild(fragment);
     }
 }
@@ -260,8 +260,15 @@ async function createListItem(item) {
         threshold = secondsToTimeFormat(countdownTime ?? threshold, "hh:mm:ss");
     }
 
-    listItem.innerHTML = `<span class="left-part">meet: ${item.target_url
-        .match(codeRegex)[0]}</span><span class="right-part">${typeDict[item.type]}: ${threshold}</span>`;
+    const spanLeft = document.createElement('span');
+    spanLeft.classList.add('left-part');
+    spanLeft.textContent = `meet: ${item.target_url.match(codeRegex)[0]}`;
+    listItem.appendChild(spanLeft);
+
+    const spanRight = document.createElement('span');
+    spanRight.classList.add('right-part');
+    spanRight.textContent = `${typeDict[item.type]}: ${threshold}`;
+    listItem.appendChild(spanRight);
 
     if (item.type === "participants") {
         try {
@@ -295,7 +302,7 @@ async function createListItem(item) {
 
 function addNoActiveCalls() {
     let listItem = document.createElement('li');
-    listItem.innerHTML = `No active calls`;
+    listItem.textContent = `No active calls`;
     activeTabsList.appendChild(listItem);
 }
 
@@ -330,11 +337,21 @@ browser.runtime.onMessage.addListener((request) => {
         });
     }
     else if (request.action === "redraw_timer") {
-        let listItem = document.querySelectorAll(`[data-tabId="${request.tabId}"]`);
-        if (listItem?.length > 0) {
-            listItem[0].innerHTML = `<span class="left-part">meet: ${request.tabUrl
-                .match(codeRegex)[0]}</span>
-            <span class="right-part">${typeDict.timer}: ${request.timeLeft}</span>`;
+        let listItem = document.querySelector(`[data-tabId="${request.tabId}"]`);
+        if (listItem) {
+            while (listItem.firstChild) {
+                listItem.removeChild(listItem.firstChild);
+            }
+
+            const spanLeft = document.createElement('span');
+            spanLeft.classList.add('left-part');
+            spanLeft.textContent = `meet: ${request.tabUrl.match(codeRegex)[0]}`;
+            listItem.appendChild(spanLeft);
+
+            const spanRight = document.createElement('span');
+            spanRight.classList.add('right-part');
+            spanRight.textContent = `${typeDict.timer}: ${request.timeLeft}`;
+            listItem.appendChild(spanRight);
         }
     }
 });
@@ -392,19 +409,19 @@ const moreInfoText = [
 ];
 
 InfoButton.addEventListener('click', () => {
-    if (InfoButton.innerHTML == "More info") {
+    if (InfoButton.textContent == "More info") {
         let fragment = document.createDocumentFragment();
 
         for (const itemText of moreInfoText) {
             let itemInfo = document.createElement('p');
-            itemInfo.innerHTML = itemText;
+            itemInfo.textContent = itemText;
             itemInfo.setAttribute('class', "more-info");
             fragment.appendChild(itemInfo);
         }
 
         infoContainer.appendChild(fragment);
 
-        InfoButton.innerHTML = "Hide";
+        InfoButton.textContent = "Hide";
     }
     else {
         let elements = document.querySelectorAll('.more-info');
@@ -412,7 +429,7 @@ InfoButton.addEventListener('click', () => {
         for (const element of elements)
             element.remove();
 
-        InfoButton.innerHTML = "More info";
+        InfoButton.textContent = "More info";
     }
 
 });

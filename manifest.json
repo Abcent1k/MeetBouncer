@@ -35,9 +35,6 @@
       "matches": [
         "https://meet.google.com/*",
         "http://meet.google.com/*"
-      ],
-      "js": [
-        "googlemeet.js"
       ]
     }
   ]
