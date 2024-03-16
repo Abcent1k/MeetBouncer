@@ -5,7 +5,7 @@ let tab_id;
 let tab_url;
 let endCallButton;
 
-chrome.storage.local.get(['mb_temp'], (res) => {
+browser.storage.local.get(['mb_temp'], (res) => {
     if (typeof res['mb_temp'] === 'undefined')
         console.log("Something went wrong. The content script can't get the data.");
 
@@ -15,7 +15,7 @@ chrome.storage.local.get(['mb_temp'], (res) => {
     type = mb_temp.type;
     threshold = mb_temp.threshold;
 
-    chrome.storage.local.remove('mb_temp');
+    browser.storage.local.remove('mb_temp');
 
     startLogic();
 });
@@ -26,7 +26,7 @@ function startLogic() {
         alert("Please make sure you have already joined the room!");
         return;
     }
-    chrome.runtime.sendMessage({
+    browser.runtime.sendMessage({
         action: 'extension_activation',
         type: type,
         threshold: threshold,
@@ -43,7 +43,7 @@ function startLogic() {
         clearTimeout(timerId);
 
         console.log("User left the call");
-        chrome.runtime.sendMessage({ action: 'check_close_meet', tab_id: tab_id });
+        browser.runtime.sendMessage({ action: 'check_close_meet', tab_id: tab_id });
     });
 
     setTimeout(() => {
@@ -93,7 +93,7 @@ function scheduleControl() {
 }
 
 function timerControl() {
-    chrome.runtime.sendMessage({
+    browser.runtime.sendMessage({
         action: 'set_timer',
         tab_id: tab_id,
         tab_url: tab_url,
@@ -110,30 +110,30 @@ function timerControl() {
 
 document.addEventListener("visibilitychange", () => {
     if (type === "participants")
-        chrome.runtime.sendMessage({ action: 'check_tabs_visibility' });
+        browser.runtime.sendMessage({ action: 'check_tabs_visibility' });
 });
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "check_visibility") {
         const isVisible = document.visibilityState === "visible";
         sendResponse({ isVisible: isVisible });
     }
     else if (request.action === "change_threshold") {
         if (type === "timer")
-            chrome.runtime.sendMessage({ action: "stop_timer", tab_id: tab_id });
+            browser.runtime.sendMessage({ action: "stop_timer", tab_id: tab_id });
 
         clearTimeout(timerId);
 
         type = request.type;
         threshold = request.threshold;
-        chrome.runtime.sendMessage({
+        browser.runtime.sendMessage({
             action: 'set_badge',
             threshold: threshold,
             tab_id: tab_id
         });
 
         startLogic();
-        chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
+        browser.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Threshold changed");
     }
     else if (request.action === "reset_extension") {
@@ -143,7 +143,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         clearTimeout(timerId);
 
-        chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
+        browser.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Extension reset on this tab");
     }
     else if (request.action === "activate_extension") {
@@ -152,7 +152,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         threshold = request.threshold;
 
         startLogic();
-        chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
+        browser.runtime.sendMessage({ action: 'redraw_active_tabs_list' });
         console.log("Extension activated on this tab");
     }
 });

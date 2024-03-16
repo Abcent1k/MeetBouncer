@@ -3,8 +3,8 @@ const codeRegex = /\w{3}-\w{4}-\w{3}/;
 const notificationId = "1";
 let intervalTabIdDict = {};
 
-chrome.runtime.onInstalled.addListener(() => {
-    chrome.storage.local.set({
+browser.runtime.onInstalled.addListener(() => {
+    browser.storage.local.set({
         'mb_default_threshold': 5,
         'mb_default_tab': 'tabParticipants',
         'mb_push_notifications': true,
@@ -13,29 +13,57 @@ chrome.runtime.onInstalled.addListener(() => {
 })
 
 function setIcon(activeFlag) {
-    if (activeFlag == "active") {
-        chrome.action.setIcon({
-            path: {
-                "16": "../img/mb-active-16.png",
-                "48": "../img/mb-active-48.png"
-            }
-        });
+    if (browser.browserAction) {
+        if (activeFlag == "active") {
+            browser.browserAction.setIcon({
+                path: {
+                    "16": "../img/mb-active-16.png",
+                    "48": "../img/mb-active-48.png"
+                }
+            });
+        }
+        else if (activeFlag == "inactive") {
+            browser.browserAction.setIcon({
+                path: {
+                    "16": "../img/mb-inactive-16.png",
+                    "48": "../img/mb-inactive-48.png"
+                }
+            });
+        }
+        else if (activeFlag == "disabled") {
+            browser.browserAction.setIcon({
+                path: {
+                    "16": "../img/mb-disabled-16.png",
+                    "48": "../img/mb-disabled-48.png"
+                }
+            });
+        }
     }
-    else if (activeFlag == "inactive") {
-        chrome.action.setIcon({
-            path: {
-                "16": "../img/mb-inactive-16.png",
-                "48": "../img/mb-inactive-48.png"
-            }
-        });
-    }
-    else if (activeFlag == "disabled") {
-        chrome.action.setIcon({
-            path: {
-                "16": "../img/mb-disabled-16.png",
-                "48": "../img/mb-disabled-48.png"
-            }
-        });
+    else if (browser.action) {
+        if (activeFlag == "active") {
+            browser.action.setIcon({
+                path: {
+                    "16": "../img/mb-active-16.png",
+                    "48": "../img/mb-active-48.png"
+                }
+            });
+        }
+        else if (activeFlag == "inactive") {
+            browser.action.setIcon({
+                path: {
+                    "16": "../img/mb-inactive-16.png",
+                    "48": "../img/mb-inactive-48.png"
+                }
+            });
+        }
+        else if (activeFlag == "disabled") {
+            browser.action.setIcon({
+                path: {
+                    "16": "../img/mb-disabled-16.png",
+                    "48": "../img/mb-disabled-48.png"
+                }
+            });
+        }
     }
 }
 
@@ -50,18 +78,18 @@ async function messageListener(request, sender, sendResponse) {
             return;
         }
 
-        chrome.storage.session.get(['meet_bouncer']).then((res) => {
+        browser.storage.session.get(['meet_bouncer']).then((res) => {
             let mbArray = res.meet_bouncer || [];
             let item = mbArray.find(item => item.target_id === meetTab.id);
 
             if (item) {
-                chrome.tabs.sendMessage(meetTab.id, {
+                browser.tabs.sendMessage(meetTab.id, {
                     action: "change_threshold",
                     type: request.type,
                     threshold: request.threshold
                 });
             } else {
-                chrome.tabs.sendMessage(meetTab.id, {
+                browser.tabs.sendMessage(meetTab.id, {
                     action: "activate_extension",
                     type: request.type,
                     threshold: request.threshold
@@ -73,10 +101,10 @@ async function messageListener(request, sender, sendResponse) {
                         'target_id': meetTab.id,
                     };
 
-                    if (chrome.runtime.lastError) {
-                        chrome.storage.local.set({ 'mb_temp': mbItem });
+                    if (browser.runtime.lastError) {
+                        browser.storage.local.set({ 'mb_temp': mbItem });
 
-                        chrome.scripting.executeScript({
+                        browser.scripting.executeScript({
                             target: { tabId: meetTab.id },
                             files: ["./js/googlemeet.js"],
                         });
@@ -94,11 +122,11 @@ async function messageListener(request, sender, sendResponse) {
 
         checkTabAction(request.tab.id);
 
-        chrome.tabs.sendMessage(request.tab.id, { action: "reset_extension" })
+        browser.tabs.sendMessage(request.tab.id, { action: "reset_extension" })
     }
 
     else if (request.action === "extension_activation") {
-        chrome.storage.session.get(['meet_bouncer']).then((res) => {
+        browser.storage.session.get(['meet_bouncer']).then((res) => {
 
             let mbArray = res.meet_bouncer || [];
             let item = mbArray.find(item => item.target_id === request.tab_id);
@@ -115,7 +143,7 @@ async function messageListener(request, sender, sendResponse) {
                 });
             }
 
-            chrome.storage.session.set({ 'meet_bouncer': mbArray });
+            browser.storage.session.set({ 'meet_bouncer': mbArray });
 
         }).then(() => {
             updateTabsStatusBasedOnVisibility();
@@ -129,13 +157,18 @@ async function messageListener(request, sender, sendResponse) {
 
             const color = typeToColor[request.type] || typeToColor['participants'];
 
-            chrome.action.setBadgeBackgroundColor({ color: color, tabId: request.tab_id });
-            chrome.action.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
+            if (browser.browserAction) {
+                browser.browserAction.setBadgeBackgroundColor({ color: color, tabId: request.tab_id });
+                browser.browserAction.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
+            } else if (browser.action) {
+                browser.action.setBadgeBackgroundColor({ color: color, tabId: request.tab_id });
+                browser.action.setBadgeText({ text: "" + threshold, tabId: request.tab_id });
+            }
         });
     }
 
     else if (request.action === "set_badge")
-        chrome.action.setBadgeText({ text: "" + request.threshold, tabId: request.tab_id });
+        browser.action.setBadgeText({ text: "" + request.threshold, tabId: request.tab_id });
 
     else if (request.action === "activate_icon")
         setIcon("active");
@@ -166,9 +199,9 @@ async function messageListener(request, sender, sendResponse) {
 
     else if (request.action === "get_countdown_time") {
         if (typeof intervalTabIdDict[request.tab_id] !== "undefined")
-            sendResponse(intervalTabIdDict[request.tab_id][1]);
+            return intervalTabIdDict[request.tab_id][1];
         else
-            sendResponse(null);
+            return null;
     }
 
     else if (request.action === "set_timer") {
@@ -185,9 +218,13 @@ async function messageListener(request, sender, sendResponse) {
 
             intervalTabIdDict[request.tab_id][1] = countdownTime;
 
-            chrome.action.setBadgeText({ text: "" + secondsToTimeFormat(countdownTime, "hh:mm"), tabId: request.tab_id });
+            if (browser.browserAction) {
+                browser.browserAction.setBadgeText({ text: "" + secondsToTimeFormat(countdownTime, "hh:mm"), tabId: request.tab_id });
+            } else if (browser.action) {
+                browser.action.setBadgeText({ text: "" + secondsToTimeFormat(countdownTime, "hh:mm"), tabId: request.tab_id });
+            }
 
-            chrome.runtime.sendMessage({
+            browser.runtime.sendMessage({
                 action: 'redraw_timer',
                 tabId: request.tab_id,
                 tabUrl: request.tab_url,
@@ -220,7 +257,7 @@ function secondsToTimeFormat(seconds, format) {
 }
 
 function checkTabAction(tab_id) {
-    chrome.storage.session.get(['meet_bouncer'], (res) => {
+    browser.storage.session.get(['meet_bouncer'], (res) => {
         let meetTabs = res['meet_bouncer'];
 
         if (typeof meetTabs === 'undefined' || meetTabs.length === 0 ||
@@ -230,9 +267,13 @@ function checkTabAction(tab_id) {
         }
         else {
             meetTabs = meetTabs.filter(item => item.target_id !== tab_id);
-            chrome.storage.session.set({ 'meet_bouncer': meetTabs });
+            browser.storage.session.set({ 'meet_bouncer': meetTabs });
             redrawActiveTabsList();
-            chrome.action.setBadgeText({ text: "", tabId: tab_id });
+            if (browser.browserAction) {
+                browser.browserAction.setBadgeText({ text: "", tabId: tab_id });
+            } else if (browser.action) {
+                browser.action.setBadgeText({ text: "", tabId: tab_id });
+            }
             if (meetTabs.length === 0) {
                 console.log("No more extension tabs, set the disabled icon");
                 setIcon("disabled");
@@ -257,7 +298,7 @@ function checkTabUpdated(tabId, changeInfo) {
 
 async function getMeetTabsAsync() {
     return new Promise((resolve) => {
-        chrome.storage.session.get(['meet_bouncer'], (result) => {
+        browser.storage.session.get(['meet_bouncer'], (result) => {
             resolve(result.meet_bouncer || []);
         });
     });
@@ -278,9 +319,9 @@ async function updateTabsStatusBasedOnVisibility() {
 
         try {
             const isVisible = await new Promise((resolve, reject) => {
-                chrome.tabs.sendMessage(dict.target_id, { action: "check_visibility" }, (response) => {
-                    if (chrome.runtime.lastError)
-                        reject(chrome.runtime.lastError.message);
+                browser.tabs.sendMessage(dict.target_id, { action: "check_visibility" }, (response) => {
+                    if (browser.runtime.lastError)
+                        reject(browser.runtime.lastError.message);
                     else
                         resolve(response?.isVisible);
                 });
@@ -315,7 +356,7 @@ async function updateNotifications(inactiveTabs) {
     if (inactiveTabs?.length === 0) return;
 
     const pushNotifications = await new Promise((resolve) => {
-        chrome.storage.local.get(['mb_push_notifications'], (response) => {
+        browser.storage.local.get(['mb_push_notifications'], (response) => {
             resolve(response.mb_push_notifications);
         });
     });
@@ -329,31 +370,30 @@ async function updateNotifications(inactiveTabs) {
 
 
 function redrawActiveTabsList() {
-    chrome.runtime.sendMessage({ action: 'redraw_active_tabs_list' }, () => {
-        if (chrome.runtime.lastError)
-            console.log("Error when redraw active tabs list: ", chrome.runtime.lastError.message);
+    browser.runtime.sendMessage({ action: 'redraw_active_tabs_list' }, () => {
+        if (browser.runtime.lastError)
+            console.log("Error when redraw active tabs list: ", browser.runtime.lastError.message);
     });
 }
 
 function notification(message, contextMessage) {
-    chrome.notifications.create(notificationId, {
+    browser.notifications.create(notificationId, {
         type: 'basic',
         iconUrl: '../img/mb-active-128.png',
         title: 'MeetBouncer',
-        message: message,
-        contextMessage: contextMessage
+        message: message + '\n' + contextMessage,
     }, () => {
         console.log('Notification create');
     });
 }
 
 function clearNotification() {
-    chrome.notifications.clear(notificationId, (response) => {
+    browser.notifications.clear(notificationId, (response) => {
         if (response)
             console.log('Notification deleted');
     });
 }
 
-chrome.tabs.onRemoved.addListener(checkTabAction)
-chrome.tabs.onUpdated.addListener(checkTabUpdated)
-chrome.runtime.onMessage.addListener(messageListener)
+browser.tabs.onRemoved.addListener(checkTabAction)
+browser.tabs.onUpdated.addListener(checkTabUpdated)
+browser.runtime.onMessage.addListener(messageListener)

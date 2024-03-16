@@ -35,9 +35,9 @@ const typeDict = {
 
 window.onload = async () => {
     const [tabs, storageSession, storageLocal] = await Promise.all([
-        chrome.tabs.query({ active: true, currentWindow: true }),
-        chrome.storage.session.get(['meet_bouncer']),
-        chrome.storage.local.get(['mb_push_notifications', 'mb_default_tab'])
+        browser.tabs.query({ active: true, currentWindow: true }),
+        browser.storage.session.get(['meet_bouncer']),
+        browser.storage.local.get(['mb_push_notifications', 'mb_default_tab'])
     ]);
 
     currentTab = tabs[0];
@@ -75,7 +75,7 @@ window.onload = async () => {
 
 async function redrawSettingsContainer() {
     const [storageLocal] = await Promise.all([
-        chrome.storage.local.get(['mb_max_threshold', 'mb_default_threshold'])
+        browser.storage.local.get(['mb_max_threshold', 'mb_default_threshold'])
     ]);
 
     mb_max_threshold = storageLocal?.mb_max_threshold;
@@ -85,9 +85,11 @@ async function redrawSettingsContainer() {
     thresholdDefaultInput.value = storageLocal?.mb_default_threshold ?? 5;
 }
 
-function activateExtension() {
+async function activateExtension() {
+    currentTab = (await browser.tabs.query({ active: true, currentWindow: true }))[0];
+
     if (tabParticipants.checked) {
-        let threshold = document.getElementById('participants-slider').value;
+        let threshold = slider.value;
 
         if (parseInt(threshold) > 0)
             setAutoLeave('participants', threshold, currentTab);
@@ -115,20 +117,17 @@ function activateExtension() {
 }
 
 function setAutoLeave(type, threshold, tab) {
-    chrome.runtime.sendMessage({
+    browser.runtime.sendMessage({
         action: 'set_auto_leave',
         type: type,
         threshold: threshold,
         tab: tab,
-    },
-        (response) => {
-            if (!response)
-                console.log(chrome.runtime.lastError.message);
-        }
-    );
+    });
 }
 
-setButton.addEventListener('mouseover', function () {
+setButton.addEventListener('mouseover', async function () {
+    currentTab = (await browser.tabs.query({ active: true, currentWindow: true }))[0];
+
     if (!meetRegex.test(currentTab.url) ||
         (tabSchedule.checked && !scheduleSetter.value) ||
         (tabTimer.checked && timerSetter.value === "00:00:00"))
@@ -138,16 +137,15 @@ setButton.addEventListener('mouseover', function () {
 });
 
 
-function resetExtension() {
-    chrome.runtime.sendMessage({ action: 'reset_auto_leave', tab: currentTab },
-        (response) => {
-            if (!response)
-                console.log(chrome.runtime.lastError.message);
-        }
-    );
+async function resetExtension() {
+    currentTab = (await browser.tabs.query({ active: true, currentWindow: true }))[0];
+
+    browser.runtime.sendMessage({ action: 'reset_auto_leave', tab: currentTab });
 }
 
-resetButton.addEventListener('mouseover', function () {
+resetButton.addEventListener('mouseover', async function () {
+    currentTab = (await browser.tabs.query({ active: true, currentWindow: true }))[0];
+
     if (!meetRegex.test(currentTab.url))
         this.disabled = true;
     else
@@ -162,26 +160,26 @@ document.querySelectorAll('input[name="radioTab"]').forEach((elem) => {
             controlContainerTitle.innerHTML = "Participants Control";
             drawParticipantsContainer();
 
-            chrome.storage.local.set({ 'mb_default_tab': 'tabParticipants' });
+            browser.storage.local.set({ 'mb_default_tab': 'tabParticipants' });
         }
         else if (tabSchedule.checked) {
             controlContainerTitle.innerHTML = "Schedule Control";
             drawScheduleContainer();
 
-            chrome.storage.local.set({ 'mb_default_tab': 'tabSchedule' });
+            browser.storage.local.set({ 'mb_default_tab': 'tabSchedule' });
         }
         else if (tabTimer.checked) {
             controlContainerTitle.innerHTML = "Timer Control";
             drawTimerContainer();
 
-            chrome.storage.local.set({ 'mb_default_tab': 'tabTimer' });
+            browser.storage.local.set({ 'mb_default_tab': 'tabTimer' });
         }
     });
 });
 
 async function drawParticipantsContainer() {
     const response = await new Promise((resolve) => {
-        chrome.storage.local.get(['mb_default_threshold', 'mb_max_threshold'],
+        browser.storage.local.get(['mb_default_threshold', 'mb_max_threshold'],
             (response) => {
                 resolve(response);
             });
@@ -253,7 +251,7 @@ async function createListItem(item) {
 
     if (item.type === "timer") {
         const countdownTime = await new Promise((resolve) => {
-            chrome.runtime.sendMessage({
+            browser.runtime.sendMessage({
                 action: "get_countdown_time",
                 tab_id: item.target_id,
             }, resolve);
@@ -268,9 +266,9 @@ async function createListItem(item) {
     if (item.type === "participants") {
         try {
             const isVisible = await new Promise((resolve, reject) => {
-                chrome.tabs.sendMessage(item.target_id, { action: "check_visibility" }, (response) => {
-                    if (chrome.runtime.lastError)
-                        reject(chrome.runtime.lastError.message);
+                browser.tabs.sendMessage(item.target_id, { action: "check_visibility" }, (response) => {
+                    if (browser.runtime.lastError)
+                        reject(browser.runtime.lastError.message);
                     else
                         resolve(response?.isVisible);
                 });
@@ -289,7 +287,7 @@ async function createListItem(item) {
 
     listItem.addEventListener('click', () => {
         let tabId = parseInt(listItem.getAttribute('data-tabId'));
-        chrome.tabs.update(tabId, { active: true });
+        browser.tabs.update(tabId, { active: true });
     });
 
     return listItem;
@@ -323,9 +321,9 @@ function secondsToTimeFormat(seconds, format) {
 }
 
 
-chrome.runtime.onMessage.addListener((request) => {
+browser.runtime.onMessage.addListener((request) => {
     if (request.action === "redraw_active_tabs_list") {
-        chrome.storage.session.get(['meet_bouncer']).then((res) => {
+        browser.storage.session.get(['meet_bouncer']).then((res) => {
             if (typeof res !== 'undefined') {
                 redrawActiveCalls(res.meet_bouncer);
             }
@@ -371,7 +369,7 @@ function plusBttn(InputField, maxValue) {
 function setValue(InputField, maxValue, storageLocalParameter, callback) {
     let valueDefault = InputField.value;
     if (valueDefault >= 1 && valueDefault <= maxValue) {
-        chrome.storage.local.set({ [storageLocalParameter]: valueDefault });
+        browser.storage.local.set({ [storageLocalParameter]: valueDefault });
         callback(valueDefault);
     }
 }
@@ -427,12 +425,12 @@ window.addEventListener('click', (event) => {
 });
 
 notificationCheckbox.addEventListener('click', () => {
-    chrome.storage.local.set({ 'mb_push_notifications': notificationCheckbox.checked });
+    browser.storage.local.set({ 'mb_push_notifications': notificationCheckbox.checked });
     if (notificationCheckbox.checked) {
-        chrome.runtime.sendMessage({ action: 'check_tabs_visibility' });
+        browser.runtime.sendMessage({ action: 'check_tabs_visibility' });
     }
     else {
-        chrome.notifications.clear(notificationId, (response) => {
+        browser.notifications.clear(notificationId, (response) => {
             if (response)
                 console.log('Notification deleted');
         });
