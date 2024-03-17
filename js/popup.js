@@ -34,42 +34,50 @@ const typeDict = {
 }
 
 window.onload = async () => {
-    const [tabs, storageSession, storageLocal] = await Promise.all([
-        browser.tabs.query({ active: true, currentWindow: true }),
-        browser.storage.session.get(['meet_bouncer']),
-        browser.storage.local.get(['mb_push_notifications', 'mb_default_tab'])
-    ]);
+    try {
+        const [tabs, storageSession, storageLocal] = await Promise.all([
+            browser.tabs.query({ active: true, currentWindow: true }),
+            browser.storage.session.get(['meet_bouncer']),
+            browser.storage.local.get(['mb_push_notifications', 'mb_default_tab'])
+        ]);
 
-    currentTab = tabs[0];
+        currentTab = tabs[0];
 
-    if (typeof storageSession !== undefined)
-        await redrawActiveCalls(storageSession.meet_bouncer);
+        if (storageSession !== undefined)
+            await redrawActiveCalls(storageSession.meet_bouncer);
 
-    switch (storageLocal?.mb_default_tab) {
-        case 'tabSchedule':
-            radioTabSchedule.checked = true;
-            controlContainerTitle.textContent = "Schedule Control";
-            drawScheduleContainer();
-            break;
-        case 'tabTimer':
-            radioTabTimer.checked = true;
-            controlContainerTitle.textContent = "Timer Control";
-            drawTimerContainer();
-            break;
-        case 'tabParticipants':
-        default:
-            radioTabParticipants.checked = true;
-            controlContainerTitle.textContent = "Participants Control";
-            await drawParticipantsContainer();
-            break;
+        switch (storageLocal?.mb_default_tab ?? 'tabParticipants') {
+            case 'tabSchedule':
+                radioTabSchedule.checked = true;
+                controlContainerTitle.textContent = "Schedule Control";
+                await drawScheduleContainer();
+                break;
+            case 'tabTimer':
+                radioTabTimer.checked = true;
+                controlContainerTitle.textContent = "Timer Control";
+                await drawTimerContainer();
+                break;
+            case 'tabParticipants':
+            default:
+                radioTabParticipants.checked = true;
+                controlContainerTitle.textContent = "Participants Control";
+                await drawParticipantsContainer();
+                break;
+        }
+        if (storageLocal?.mb_push_notifications !== 'undefined')
+            notificationCheckbox.checked = storageLocal.mb_push_notifications;
+
+    } catch (error) {
+        console.error('Error during extension initialization:', error);
+    } finally {
+        document.body.style.visibility = 'visible';
     }
 
-    document.body.style.visibility = 'visible';
-
-    if (storageLocal?.mb_push_notifications !== undefined)
-        notificationCheckbox.checked = storageLocal.mb_push_notifications;
-
-    await redrawSettingsContainer();
+    try {
+        await redrawSettingsContainer();
+    } catch (error) {
+        console.error('Error when rendering settings:', error);
+    }
 }
 
 
